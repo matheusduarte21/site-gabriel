@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
 import { X } from "lucide-react";
+import { ListClientes } from "../../helpers/ListClients";
 Modal.setAppElement("#root");
 
 interface EmployeeFormProps {
@@ -17,11 +18,14 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
     entryTime: "",
     distance: "",
     address: "",
-    city: "",
     status: "",
-    state: "",
     technicians: "",
     notes: "",
+    appointmentDate: "",
+    HourAppointment:"",
+    StartTime:"",
+    arrivalTime:"",
+    expenses:"",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -32,7 +36,6 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // onSuccess(formData);
     onClose();
   };
 
@@ -41,7 +44,7 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
       isOpen={true}
       onRequestClose={onClose}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6"
+      className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 overflow-auto sm:overflow-hidden h-screen"
     >
       <div  className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Novo Registro</h2>
@@ -53,18 +56,24 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
         </button>
       </div>
       <form onSubmit={handleSubmit} className="grid gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900">
-              Nome do Cliente
+             Cliente
             </label>
-            <input
-              type="text"
-              name="clientName"
+            <select
+              name="returnVisit"
               value={formData.clientName}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            />
+              className="mt-2 border-2 block w-full rounded-md block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            >
+              <option value="">Selecione</option>
+              {ListClientes.map((client) => (
+                <option key={client.value} value={client.value}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-900">
@@ -75,9 +84,77 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
               name="callNumber"
               value={formData.callNumber}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 border-2 block w-full  block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+              Data agendada
+            </label>
+            <input
+              type="date"
+              name="callNumber"
+              value={formData.appointmentDate}
+              onChange={handleInputChange}
+              className="mt-2 border-2 block w-full  block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+              Hora agendada
+            </label>
+            <input
+              type="time"
+              name="callNumber"
+              value={formData.HourAppointment}
+              onChange={handleInputChange}
+              className="mt-2 border-2 block w-full  block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+              Chegada no local
+            </label>
+            <input
+              type="time"
+              name="exitTime"
+              value={formData.arrivalTime}
+              onChange={handleInputChange}
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+              Inicio de atendimento
+            </label>
+            <input
+              type="time"
+              name="entryTime"
+              value={formData.StartTime}
+              onChange={handleInputChange}
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+              Fim de atendimento
+            </label>
+            <input
+              type="time"
+              name="entryTime"
+              value={formData.exitTime}
+              onChange={handleInputChange}
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-900">
               Retorno
@@ -86,7 +163,7 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
               name="returnVisit"
               value={formData.returnVisit}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 border-2 block w-full rounded-md block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
               <option value="">Selecione</option>
               <option value="Sim">Sim</option>
@@ -95,71 +172,63 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900">
-              Hora de Saída
+              Endereço (rua, n°, bairro )
             </label>
             <input
               type="text"
-              name="exitTime"
-              value={formData.exitTime}
+              name="address"
+              value={formData.address}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-900">
-              Hora de Entrada
-            </label>
-            <input
-              type="text"
-              name="entryTime"
-              value={formData.entryTime}
-              onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900">
-              Km de deslocamento
+            Deslocamento
             </label>
             <input
               type="text"
               name="distance"
               value={formData.distance}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-900">
-            Endereço
-          </label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleInputChange}
-            className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900">
-              Cidade
+              Despesas
             </label>
             <input
               type="text"
-              name="city"
-              value={formData.city}
+              name="address"
+              value={formData.address}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">
+            Valor do chamado
+            </label>
+            <input
+              type="number"
+              name="distance"
+              value={formData.expenses}
+              onChange={handleInputChange}
+              className="mt-2 block border-2 w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900">
               Status
@@ -168,25 +237,14 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 border-2 block w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
               <option value="">Selecione</option>
-              <option value="Concluído">Concluído</option>
-              <option value="Cancelado">Cancelado</option>
-              <option value="Em andamento">Em andamento</option>
+              <option value="Concluído">Finalizado</option>
+              <option value="Concluído">Agendado</option>
+              <option value="Cancelado">Em atendimento</option>
+              <option value="Em andamento">Encerrado</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900">
-              UF
-            </label>
-            <input
-              type="text"
-              name="state"
-              value={formData.state}
-              onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-900">
@@ -196,12 +254,18 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
               name="technicians"
               value={formData.technicians}
               onChange={handleInputChange}
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 border-2 block w-full block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
               <option value="">Selecione</option>
-              <option value="Fulano 1">Fulano 1</option>
-              <option value="Fulano 2">Fulano 2</option>
-              <option value="Fulano 3">Fulano 3</option>
+              <option value="Fulano 1">ELISSAMA</option>
+              <option value="Fulano 2">GABRIEL</option>
+              <option value="Fulano 3">LEONARDO</option>
+              <option value="Fulano 3">MARCUS</option>
+              <option value="Fulano 3">DIOGO</option>
+              <option value="Fulano 3">JUAN</option>
+              <option value="Fulano 3">JEFERSON</option>
+              <option value="Fulano 3">ROBSON</option>
+              <option value="Fulano 3">THIAGO</option>
             </select>
           </div>
         </div>
@@ -215,14 +279,14 @@ const EmployeeForm = ({ onClose}: EmployeeFormProps) => {
             rows={4}
             value={formData.notes}
             onChange={handleInputChange}
-            className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            className="mt-2 border-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             placeholder="Digite suas observações aqui"
           />
         </div>
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900"
           >
             Salvar
           </button>
