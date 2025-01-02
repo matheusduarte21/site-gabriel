@@ -9,6 +9,8 @@ import Contact from './components/Contact';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import StaffDashboard from './components/staff/StaffDaschboard';
+import StaffLogin from './components/staff/StaffLogin';
 
 function App() {
   return (
@@ -21,6 +23,16 @@ function App() {
             // <ProtectedRoute>
               <AdminDashboard />
             // </ProtectedRoute>
+          }
+        />
+
+      <Route path="/staff/login" element={<StaffLogin />} />
+        <Route
+          path="/staff/dashboard"
+          element={
+            <ProtectedRoute>
+              <StaffDashboard />
+            </ProtectedRoute>
           }
         />
         <Route

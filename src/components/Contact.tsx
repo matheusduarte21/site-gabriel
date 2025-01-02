@@ -6,6 +6,16 @@ import iconInsta from '../assests/socialIcons/icons8-instagram-48.png'
 import iconWpp from '../assests/socialIcons/icons8-whatsapp-48.png'
 
 const Contact = () => {
+
+  const redirectLink = () => {
+    window.open('https://www.linkedin.com/company/teccorp-field-service/posts/?feedView=all', '_blank');
+  }
+  const redirectInsta = () => {
+    window.open('https://www.instagram.com/teccorp.tec/', '_blank');
+  }
+  const redirecWpp = () => {
+    window.open('https://api.whatsapp.com/send/?phone=5521983736130&text&type=phone_number&app_absent=0', '_blank');
+  }
   return (
     <section id="contact" className="py-20 bg-blue-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,9 +91,9 @@ const Contact = () => {
               </h4>
               <div>
                 <div className='flex justify-center space-x-4 mt-3'>
-                  <span><img src={iconLinkedln} /></span>
-                  <span><img src={iconInsta} /></span>
-                  <span><img src={iconWpp} /></span>
+                  <span><img onClick={redirectLink} src={iconLinkedln} /></span>
+                  <span><img onClick={redirectInsta} src={iconInsta} /></span>
+                  <span><img onClick={redirecWpp} src={iconWpp} /></span>
                 </div>
               </div>
             </div>

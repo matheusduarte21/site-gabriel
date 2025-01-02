@@ -1,50 +1,95 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
-import EmployeeList from './EmployeeList';
-import { mockEmployees, Employee } from '../../lib/mockData';
-import EmployeeForm from './EmployeeForm';
-
+import { useMemo } from 'react';
+import ServiceCallTable from './ServiceCallTable';
+import ServiceCallModal from './ServiceCallModal';
+import ServiceCallForm from './ServiceCallForm';
+import ServiceCallFilters from './filters/ServiceCallFIlter'; // Adicionado
+import { mockServiceCalls, ServiceCall } from '../../lib/mockData';
 
 const AdminDashboard = () => {
   const [showForm, setShowForm] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [selectedCall, setSelectedCall] = useState<ServiceCall | null>(null);
+  const [serviceCalls, setServiceCalls] = useState<ServiceCall[]>(mockServiceCalls);
 
-  const handleAddEmployee = (newEmployee: Omit<Employee, 'id'>) => {
-    const employee = {
-      ...newEmployee,
-      id: Date.now().toString()
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedAnalyst, setSelectedAnalyst] = useState('');
+
+  const analysts = useMemo(() => {
+    const uniqueAnalysts = new Set(serviceCalls.map((call) => call.analyst));
+    return Array.from(uniqueAnalysts);
+  }, [serviceCalls]);
+
+  const filteredCalls = useMemo(() => {
+    return serviceCalls.filter((call) => {
+      const monthMatch = selectedMonth 
+        ? call.datetime.split('-')[1] === selectedMonth 
+        : true;
+      
+      const analystMatch = selectedAnalyst 
+        ? call.analyst === selectedAnalyst 
+        : true;
+
+      return monthMatch && analystMatch;
+    });
+  }, [serviceCalls, selectedMonth, selectedAnalyst]);
+
+  const handleAddServiceCall = (newCall: Omit<ServiceCall, 'id'>) => {
+    const serviceCall = {
+      ...newCall,
+      id: Date.now().toString(),
     };
-    setEmployees([...employees, employee]);
+    setServiceCalls([serviceCall, ...serviceCalls]);
+    setShowForm(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Chamados Técnicos</h1>
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
-            Nova Chamada
+            Novo Chamado
           </button>
         </div>
 
+        {/* Filtros Adicionados */}
+        <ServiceCallFilters
+          selectedMonth={selectedMonth}
+          selectedAnalyst={selectedAnalyst}
+          analysts={analysts}
+          onMonthChange={setSelectedMonth}
+          onAnalystChange={setSelectedAnalyst}
+        />
+
+        {/* Tabela com filtros aplicados */}
+        <ServiceCallTable
+          serviceCalls={filteredCalls}
+          onViewDetails={(call) => setSelectedCall(call)} onUpdateCall={function (updatedCall: ServiceCall): void {
+            throw new Error('Function not implemented.');
+          } }        />
+
+        {/* Modal de Formulário Atualizado */}
         {showForm && (
-          <EmployeeForm
+          <ServiceCallForm
             onClose={() => setShowForm(false)}
-            // onSuccess={(employee: Omit<Employee, "id">) => {
-            //   handleAddEmployee(employee);
-            //   setShowForm(false);
-            // }}
+            onSuccess={handleAddServiceCall}
           />
         )}
 
-        <EmployeeList employees={employees} />
+        {selectedCall && (
+          <ServiceCallModal
+            serviceCall={selectedCall}
+            onClose={() => setSelectedCall(null)}
+          />
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default AdminDashboard;
