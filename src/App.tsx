@@ -20,13 +20,12 @@ function App() {
         <Route
           path="/admin"
           element={
-            // <ProtectedRoute>
+            <ProtectedRoute requireAdmin>
               <AdminDashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
-
-      <Route path="/staff/login" element={<StaffLogin />} />
+        <Route path="/staff/login" element={<StaffLogin />} />
         <Route
           path="/staff/dashboard"
           element={

@@ -1,9 +1,9 @@
-import React from 'react';
+
 import { X } from 'lucide-react';
-import { ServiceCall } from '../../lib/mockData';
+
 
 interface ServiceCallModalProps {
-  serviceCall: ServiceCall;
+  serviceCall: any;
   onClose: () => void;
 }
 
@@ -27,32 +27,28 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <InfoItem label="Status" value={serviceCall.status} />
-              <InfoItem
-                label="Data/Hora do Chamado"
-                value={new Date(serviceCall.datetime).toLocaleString('pt-BR')}
-              />
-              <InfoItem label="Número do Chamado" value={serviceCall.callNumber} />
+              <InfoItem label="Número do Chamado" value={serviceCall.ticket_number} />
               <InfoItem label="Cliente" value={serviceCall.client} />
-              <InfoItem label="Analista" value={serviceCall.analyst} />
+              <InfoItem label="técnico" value={serviceCall.technicians} />
               <InfoItem
                 label="Data/Hora Agendada"
-                value={new Date(serviceCall.appointmentDate).toLocaleString('pt-BR')}
+                value={serviceCall.hour_appointment                }
               />
-              <InfoItem label="Hora Agendada" value={serviceCall.HourAppointment} />
-              <InfoItem label="Hora de Chegada" value={serviceCall.arrivalTime} />
-              <InfoItem label="Hora de Início" value={serviceCall.StartTime} />
-              <InfoItem label="Hora de Saída" value={serviceCall.exitTime} />
-              <InfoItem label="Retorno" value={serviceCall.returnVisit} />
+              <InfoItem label="Hora Agendada" value={serviceCall.hour_appointment} />
+              <InfoItem label="Hora de Chegada" value={serviceCall.arrival_time!} />
+              <InfoItem label="Hora de Início" value={serviceCall.start_time!} />
+              <InfoItem label="Hora de Saída" value={serviceCall.exit_time!} />
+              <InfoItem label="Retorno" value={serviceCall.return_visit!} />
               <InfoItem label="Endereço" value={serviceCall.address} />
-              <InfoItem label="Distância" value={serviceCall.distance} />
-              <InfoItem label="Despesas" value={serviceCall.expenses} />
-              <InfoItem label="Valor do Chamado" value={serviceCall.valueCall} />
+              <InfoItem label="Distância" value={serviceCall.distance!} />
+              <InfoItem label="Despesas" value={serviceCall.expenses!} />
+              <InfoItem label="Valor do Chamado" value={serviceCall.value_call!} />
             </div>
 
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
               <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
-                {serviceCall.description}
+                {serviceCall.notes}
               </p>
             </div>
 
@@ -71,7 +67,7 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
   );
 };
 
-const InfoItem = ({ label, value }: { label: string; value: string }) => (
+const InfoItem = ({ label, value }: { label: string; value: any }) => (
   <div>
     <dt className="text-sm font-medium text-gray-500">{label}</dt>
     <dd className="mt-1 text-sm text-gray-900">{value}</dd>

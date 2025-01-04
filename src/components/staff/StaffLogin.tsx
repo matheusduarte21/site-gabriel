@@ -10,7 +10,6 @@ const StaffLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Mock login - replace with real authentication later
     if (email.endsWith('')) {
       navigate('/staff/dashboard');
     } else {

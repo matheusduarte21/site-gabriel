@@ -2,7 +2,7 @@ import React from 'react';
 import { ServiceCall } from '../../lib/mockData';
 
 const statusStyles = {
-  'Pendente': 'bg-yellow-50 text-yellow-800 border-yellow-200',
+  'Agendado': 'bg-yellow-50 text-yellow-800 border-yellow-200',
   'Em Andamento': 'bg-blue-50 text-blue-800 border-blue-200',
   'Concluído': 'bg-green-50 text-green-800 border-green-200',
   'Cancelado': 'bg-gray-50 text-gray-800 border-gray-200'

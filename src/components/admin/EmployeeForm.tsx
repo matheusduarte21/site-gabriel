@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Modal from "react-modal";
 import { X } from "lucide-react";
 import { ListClientes } from "../../helpers/ListClients";
+import supabase from "../../lib/supabase";
 Modal.setAppElement("#root");
 
 interface EmployeeFormProps {
@@ -10,8 +11,8 @@ interface EmployeeFormProps {
 
 const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
   const [formData, setFormData] = useState({
-    clientName: "",
-    callNumber: "",
+    client: "",
+    ticketNumber: "",
     returnVisit: "",
     exitTime: "",
     distance: "",
@@ -25,8 +26,11 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     arrivalTime: "",
     valueCall:"",
     expenses: "",
-
+    solution: "",
+    description: "",
   });
+
+  
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -35,10 +39,42 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit =  async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const { data, error } = await supabase
+        .from('service_call')
+        .insert([{
+            status: formData.status,
+            client: formData.client.trim(),
+            ticket_number: formData.ticketNumber.trim(),
+            description: formData.description.trim(),
+            solution: formData.solution?.trim() || null,
+            appointment_date: formData.appointmentDate,
+            hour_appointment: formData.HourAppointment,
+            arrival_time: formData.arrivalTime || null,
+            start_time: formData.StartTime || null,
+            exit_time: formData.exitTime || null,
+            return_visit: formData.returnVisit || null,
+            address: formData.address.trim(),
+            distance: formData.distance || null,
+            expenses: formData.expenses ? parseFloat(formData.expenses) : null,
+            value_call: formData.valueCall ? parseFloat(formData.valueCall) : null,
+            technicians: formData.technicians.trim(),
+            notes: formData.notes || null,
+        }]);
+
+    if (error) {
+      console.error(error);
+      
+    }else{
+      console.log(data);
+    }
+
     onClose();
   };
+
+
 
   return (
     <Modal
@@ -58,8 +94,8 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
           <div>
             <label className="block text-sm font-medium text-gray-900">Cliente</label>
             <select
-              name="clientName"
-              value={formData.clientName}
+              name="client"
+              value={formData.client}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md min-w-0 py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
@@ -76,8 +112,8 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             <label className="block text-sm font-medium text-gray-900">Número do chamado</label>
             <input
               type="text"
-              name="callNumber"
-              value={formData.callNumber}
+              name="ticketNumber"
+              value={formData.ticketNumber}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
@@ -213,10 +249,10 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
               <option value="">Selecione</option>
-              <option value="Concluído">Finalizado</option>
+              <option value="Concluído">Concluído</option>
               <option value="Agendado">Agendado</option>
-              <option value="Em atendimento">Em atendimento</option>
-              <option value="Encerrado">Encerrado</option>
+              <option value="Em atendimento">Em Andamento</option>
+              <option value="Cancelado">Cancelado</option>
             </select>
           </div>
 
@@ -258,7 +294,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
           >
-            Salvar
+            Adicionar
           </button>
         </div>
       </form>

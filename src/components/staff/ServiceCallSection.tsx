@@ -1,4 +1,3 @@
-import React from 'react';
 import { ServiceCallSectionProps } from './types';
 
 const ServiceCallSection = ({ title, calls, badgeColor }: ServiceCallSectionProps) => {

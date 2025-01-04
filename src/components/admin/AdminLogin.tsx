@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoForm from '../../assests/TECCORP LOGO/4.png'
+import { signIn } from '../../lib/auth';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Mock login - substitua com autenticação real no futuro
-    if (email === 'admin@techservice.com.br' && password === 'admin123') {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      const { user } = await signIn(email, password);
+      
+      if (user?.email !== 'admin@techservice.com.br') {
+        setError('Acesso não autorizado');
+        return;
+      }
+      
       navigate('/admin');
-    } else {
+    } catch (err) {
       setError('Credenciais inválidas');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 

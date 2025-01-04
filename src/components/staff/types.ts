@@ -8,7 +8,7 @@ export interface ServiceCallListProps {
 
 export interface ServiceCallSectionProps {
   title: string;
-  calls: ServiceCall[];
+  calls: any[];
   badgeColor: string;
   onCallSelect: (call: ServiceCall) => void;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Eye, FilePenLine, X } from "lucide-react";
 import { ServiceCall } from "../../lib/mockData";
 import StatusBadge from "./table/StatusBadge";
@@ -6,18 +6,18 @@ import TableWithStyledHeaders from "./table/TableHeader";
 import { ListClientes } from "../../helpers/ListClients";
 
 interface ServiceCallTableProps {
-  serviceCalls: ServiceCall[];
+  serviceCalls: any[];
   onViewDetails: (call: ServiceCall) => void;
   onUpdateCall: (updatedCall: ServiceCall) => void;
 }
 
 const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: ServiceCallTableProps) => {
   const headers = [
-    "Data/Hora",
+    "Data",
     "Status",
     "Cliente",
     "Nº Chamado",
-    "Analista",
+    "Técnico",
     "Ações",
   ];
 
@@ -50,7 +50,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(call.datetime).toLocaleString("pt-BR")}
+                  {(call.appointment_date)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <StatusBadge status={call.status} />
@@ -59,10 +59,10 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
                   {call.client}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {call.ticketNumber}
+                  {call.ticket_number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {call.analyst}
+                  {call.technicians}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex space-x-2">
@@ -124,12 +124,12 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
                 onChange={(e) =>
                   setSelectedCall({
                     ...selectedCall,
-                    status: e.target.value as "Pendente" | "Em Andamento" | "Concluído" | "Cancelado",
+                    status: e.target.value as "Agendado" | "Em Andamento" | "Concluído" | "Cancelado",
                   })
                 }
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
-                <option value="Pendente">Pendente</option>
+                <option value="Agendado">Agendado</option>
                 <option value="Em andamento">Em andamento</option>
                 <option value="Concluído">Concluído</option>
                 <option value="Cancelado">Cancelado</option>
@@ -157,9 +157,9 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
             <div>
               <label className="block text-sm font-medium text-gray-700">Analista</label>
               <select
-                value={selectedCall?.analyst}
+                value={selectedCall?.technicians}
                 onChange={(e) =>
-                  setSelectedCall({ ...selectedCall, analyst: e.target.value })
+                  setSelectedCall({ ...selectedCall, technicians: e.target.value })
                 }
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >

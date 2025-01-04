@@ -52,7 +52,7 @@ const ServiceCallList = ({ title, calls, badgeColor }: ServiceCallListProps) => 
                   </p>
                 </div>
                 <div className="text-sm text-right">
-                  <p className="text-gray-900 font-medium">{call.analyst}</p>
+                  <p className="text-gray-900 font-medium">{call.technicians}</p>
                 </div>
               </div>
             </div>
