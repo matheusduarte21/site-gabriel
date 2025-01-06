@@ -8,15 +8,17 @@ import Clients from './components/Clients';
 import Contact from './components/Contact';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
-import ProtectedRoute from './components/auth/ProtectedRoute';
 import StaffDashboard from './components/staff/StaffDaschboard';
 import StaffLogin from './components/staff/StaffLogin';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Rota de login do administrador */}
         <Route path="/admin/login" element={<AdminLogin />} />
+        
         <Route
           path="/admin"
           element={
@@ -25,15 +27,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route path="/staff/login" element={<StaffLogin />} />
+        
         <Route
           path="/staff/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireStaff>
               <StaffDashboard />
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/"
           element={

@@ -2,7 +2,7 @@ import { ServiceCall } from '../../lib/mockData';
 
 export interface ServiceCallListProps {
   title: string;
-  calls: ServiceCall[];
+  calls: any[];
   badgeColor: string;
 }
 

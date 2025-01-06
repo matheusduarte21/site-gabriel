@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signIn } from '../../lib/auth';
 
 const StaffLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (email.endsWith('')) {
-      navigate('/staff/dashboard');
-    } else {
-      setError('Credenciais inválidas');
-    }
-  };
+   const handleLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setLoading(true);
+      
+      try {
+        const { user } = await signIn(email, password);
+        
+        if (user?.email !== 'tecnicos@teccorp.com.br') {
+          setError('Acesso não autorizado');
+          return;
+        }
+        
+        navigate('/staff/dashboard');
+      } catch (err) {
+        setError('Credenciais inválidas');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

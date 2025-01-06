@@ -8,7 +8,7 @@ import { ServiceCallListProps } from './types';
 
 const ServiceCallList = ({ title, calls, badgeColor }: ServiceCallListProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [selectedCall, setSelectedCall] = useState<ServiceCall | null>(null);
+  const [selectedCall, setSelectedCall] = useState<any | null>(null);
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -48,7 +48,7 @@ const ServiceCallList = ({ title, calls, badgeColor }: ServiceCallListProps) => 
                     <StatusIndicator status={call.status} />
                   </div>
                   <p className="text-sm text-gray-500">
-                    {call.ticketNumber} • {new Date(call.datetime).toLocaleString('pt-BR')}
+                    {call.ticketn_number} • {call.appointment_date}
                   </p>
                 </div>
                 <div className="text-sm text-right">

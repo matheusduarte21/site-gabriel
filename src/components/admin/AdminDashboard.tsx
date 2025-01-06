@@ -41,14 +41,14 @@ const AdminDashboard = () => {
     const fetchServiceCalls = async () => {
       try {
         const calls = await getServiceCalls();
-        setServiceCalls(calls);
+        setServiceCalls(calls)
       } catch (error) {
         console.error('Erro ao buscar chamados:', error);
       }
     };
   
     fetchServiceCalls();
-  }, [serviceCalls]);
+  }, []);
 
 
   return (
@@ -66,7 +66,6 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {/* Filtros Adicionados */}
         <ServiceCallFilters
           selectedMonth={selectedMonth}
           selectedAnalyst={selectedAnalyst}
@@ -75,14 +74,10 @@ const AdminDashboard = () => {
           onAnalystChange={setSelectedAnalyst}
         />
 
-        {/* Tabela com filtros aplicados */}
         <ServiceCallTable
           serviceCalls={filteredCalls}
-          onViewDetails={(call) => setSelectedCall(call)} onUpdateCall={function (updatedCall: ServiceCall): void {
-            throw new Error('Function not implemented.');
-          } }        />
+          onViewDetails={(call) => setSelectedCall(call)}      />
 
-        {/* Modal de Formulário Atualizado */}
         {showForm && (
           <EmployeeForm
             onClose={() => setShowForm(false)}

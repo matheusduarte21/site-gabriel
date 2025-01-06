@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '../../lib/auth'
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "../../lib/auth";
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireStaff?: boolean; 
 }
 
-const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireStaff = false }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   async function checkAuth() {
     try {
       const currentUser = await getCurrentUser();
+      console.log(currentUser);
       
       if (!currentUser) {
         navigate('/admin/login');
@@ -30,9 +32,14 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
         return;
       }
 
+      if (requireStaff && currentUser.email !== 'tecnicos@teccorp.com.br') {
+        navigate('/');
+        return;
+      }
+
       setUser(currentUser);
     } catch (error) {
-      navigate('/admin/login');
+      navigate('/');
     } finally {
       setLoading(false);
     }
