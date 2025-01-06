@@ -91,9 +91,15 @@ const Contact = () => {
               </h4>
               <div>
                 <div className='flex justify-center space-x-4 mt-3'>
-                  <span><img onClick={redirectLink} src={iconLinkedln} /></span>
-                  <span><img onClick={redirectInsta} src={iconInsta} /></span>
-                  <span><img onClick={redirecWpp} src={iconWpp} /></span>
+                <span>
+                  <img onClick={redirectLink} src={iconLinkedln} alt="Link para o LinkedIn" />
+                </span>
+                <span>
+                  <img onClick={redirectInsta} src={iconInsta} alt="Link para o Instagram" />
+                </span>
+                <span>
+                  <img onClick={redirecWpp} src={iconWpp} alt="Link para o WhatsApp" />
+                </span>
                 </div>
               </div>
             </div>

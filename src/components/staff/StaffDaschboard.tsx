@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useEffect,useState } from 'react';
 import ServiceCallList from './ServiceCallList';
-import { mockServiceCalls } from '../../lib/mockData';
+import { getServiceCalls } from '../../lib/api/service-calls';
+import { ServiceCall } from '../../lib/mockData';
 
 const StaffDashboard = () => {
-  const inProgressCalls = mockServiceCalls.filter(call => call.status === 'Em Andamento');
-  const pendingCalls = mockServiceCalls.filter(call => call.status === 'Pendente');
-  const completedCalls = mockServiceCalls.filter(call => call.status === 'Concluído');
+
+  const [serviceCalls, setServiceCalls] = useState<ServiceCall[]>([]);
+
+  useEffect(() => {
+      const fetchServiceCalls = async () => {
+        try {
+          const calls = await getServiceCalls();
+          setServiceCalls(calls);
+        } catch (error) {
+          console.error('Erro ao buscar chamados:', error);
+        }
+      };
+    
+      fetchServiceCalls();
+    }, [serviceCalls]);
+
+    
+  const inProgressCalls = serviceCalls.filter(call => call.status === 'Em Andamento');
+  const pendingCalls = serviceCalls.filter(call => call.status === 'Agendado');
+  const completedCalls = serviceCalls.filter(call => call.status === 'Concluído');
 
   return (
     <div className="min-h-screen bg-gray-100 py-6">
@@ -20,7 +38,7 @@ const StaffDashboard = () => {
           />
           
           <ServiceCallList
-            title="Pendentes"
+            title="Agendados"
             calls={pendingCalls}
             badgeColor="bg-yellow-100 text-yellow-800"
           />

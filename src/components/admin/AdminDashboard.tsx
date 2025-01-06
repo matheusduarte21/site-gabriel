@@ -24,14 +24,15 @@ const AdminDashboard = () => {
 
   const filteredCalls = useMemo(() => {
     return serviceCalls.filter((call) => {
+      const datetime = call.datetime || '';
       const monthMatch = selectedMonth 
-        ? call.datetime.split('-')[1] === selectedMonth 
+        ? datetime.split('-')[1] === selectedMonth 
         : true;
-      
+  
       const analystMatch = selectedAnalyst 
         ? call.technicians === selectedAnalyst 
         : true;
-
+  
       return monthMatch && analystMatch;
     });
   }, [serviceCalls, selectedMonth, selectedAnalyst]);

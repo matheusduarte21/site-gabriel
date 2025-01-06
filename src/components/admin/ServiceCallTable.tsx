@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, FilePenLine, X } from "lucide-react";
 import { ServiceCall } from "../../lib/mockData";
 import StatusBadge from "./table/StatusBadge";
 import TableWithStyledHeaders from "./table/TableHeader";
 import { ListClientes } from "../../helpers/ListClients";
+import { UpdateServiceCalls } from "../../lib/api/service-calls";
 
 interface ServiceCallTableProps {
   serviceCalls: any[];
   onViewDetails: (call: ServiceCall) => void;
-  onUpdateCall: (updatedCall: ServiceCall) => void;
 }
 
-const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: ServiceCallTableProps) => {
+const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps) => {
   const headers = [
     "Data",
     "Status",
@@ -21,21 +21,33 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
     "Ações",
   ];
 
-  const [selectedCall, setSelectedCall] = useState<ServiceCall | null>(null);
+  const [selectedCall, setSelectedCall] = useState<any | null>(null);
 
   const openEditModal = (call: ServiceCall) => {
     setSelectedCall(call);
   };
-
+  
   const closeEditModal = () => {
     setSelectedCall(null);
   };
 
   const handleUpdate = () => {
     if (selectedCall) {
-      onUpdateCall(selectedCall);
+      const {id} = selectedCall;
+      UpdateCall(id, selectedCall);
       closeEditModal();
     }
+  };
+  const UpdateCall = (id: string, selectedCall: any) => {
+    const fetchUpdateCalls = async () => {
+      try {
+        await UpdateServiceCalls(id, selectedCall);
+      } catch (error) {
+        console.error('Erro ao buscar chamados:', error);
+      }
+    };
+  
+    fetchUpdateCalls();
   };
 
   return (
@@ -109,7 +121,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
               <label className="block text-sm font-medium text-gray-700">Número do Chamado</label>
               <input
                 type="text"
-                value={selectedCall?.ticketNumber}
+                value={selectedCall?.ticket_number}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, ticketNumber: e.target.value })
                 }
@@ -177,22 +189,10 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Data/Hora do Chamado</label>
-              <input
-                type="datetime-local"
-                value={new Date(selectedCall?.datetime).toISOString().slice(0, 16)}
-                onChange={(e) =>
-                  setSelectedCall({ ...selectedCall, datetime: e.target.value })
-                }
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-gray-700">Data/Hora Agendada</label>
               <input
                 type="datetime-local"
-                value={new Date(selectedCall?.appointmentDate).toISOString().slice(0, 16)}
+                value={selectedCall?.appointment_date}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, appointmentDate: e.target.value })
                 }
@@ -204,7 +204,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
               <label className="block text-sm font-medium text-gray-700">Hora de Chegada</label>
               <input
                 type="time"
-                value={selectedCall?.arrivalTime}
+                value={selectedCall?.arrival_time}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, arrivalTime: e.target.value })
                 }
@@ -216,7 +216,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
               <label className="block text-sm font-medium text-gray-700">Hora de Início</label>
               <input
                 type="time"
-                value={selectedCall?.StartTime}
+                value={selectedCall.start_time}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, StartTime: e.target.value })
                 }
@@ -228,7 +228,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
               <label className="block text-sm font-medium text-gray-700">Hora de Saída</label>
               <input
                 type="time"
-                value={selectedCall?.exitTime}
+                value={selectedCall?.exit_time}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, exitTime: e.target.value })
                 }
@@ -276,7 +276,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
               <label className="block text-sm font-medium text-gray-700">Valor do Chamado</label>
               <input
                 type="text"
-                value={selectedCall?.valueCall}
+                value={selectedCall?.value_call}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, valueCall: e.target.value })
                 }
@@ -288,7 +288,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails, onUpdateCall }: Service
           <div>
             <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
             <textarea
-              value={selectedCall?.description}
+              value={selectedCall?.notes}
               onChange={(e) =>
                 setSelectedCall({ ...selectedCall, description: e.target.value })
               }

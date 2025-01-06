@@ -52,14 +52,6 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
               </p>
             </div>
 
-            {serviceCall.solution && (
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Solução</h3>
-                <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
-                  {serviceCall.solution}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>

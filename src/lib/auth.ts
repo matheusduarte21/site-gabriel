@@ -20,6 +20,6 @@ export async function getCurrentUser() {
   return user;
 }
 
-export function isAdmin(email: string | undefined) {
-  return email === 'admin@techservice.com.br';
-}
+// export function isAdmin(email: string | undefined) {
+//   return email === 'admin@techservice.com.br';
+// }

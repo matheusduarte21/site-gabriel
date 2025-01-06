@@ -251,7 +251,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
               <option value="">Selecione</option>
               <option value="Concluído">Concluído</option>
               <option value="Agendado">Agendado</option>
-              <option value="Em atendimento">Em Andamento</option>
+              <option value="Em Andamento">Em Andamento</option>
               <option value="Cancelado">Cancelado</option>
             </select>
           </div>
