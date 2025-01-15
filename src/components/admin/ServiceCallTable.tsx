@@ -5,6 +5,7 @@ import StatusBadge from "./table/StatusBadge";
 import TableWithStyledHeaders from "./table/TableHeader";
 import { ListClientes } from "../../helpers/ListClients";
 import { UpdateServiceCalls } from "../../lib/api/service-calls";
+import supabase from "../../lib/supabase";
 
 interface ServiceCallTableProps {
   serviceCalls: any[];
@@ -21,7 +22,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
     "Ações",
   ];
 
-  const [selectedCall, setSelectedCall] = useState<any | null>(null);
+  const [selectedCall, setSelectedCall] = useState<any | string>("");
 
   const openEditModal = (call: ServiceCall) => {
     setSelectedCall(call);
@@ -31,9 +32,23 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
     setSelectedCall(null);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (selectedCall) {
-      const { id } = selectedCall;
+      const { id, file_url } = selectedCall;
+      let fileUrl = file_url
+
+      if (file_url instanceof File) {
+        const { data, error } = await supabase.storage
+          .from('image_rat')  
+          .upload(`files/${file_url.name}`, file_url);
+  
+        if (error) {
+          console.error('Error uploading file:', error);
+          return;
+        }
+
+        fileUrl = data?.path;
+      }
       
       const dataUpdate = {
         status: selectedCall.status,
@@ -53,6 +68,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
         value_call: selectedCall.value_call ? parseFloat(selectedCall.value_call) : null,
         technicians: selectedCall.technicians,
         notes: selectedCall.notes || null,
+        file_url: fileUrl || null, 
       };
 
       UpdateCall(id, dataUpdate);
@@ -332,6 +348,22 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
               }
               className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-900 mb-2">Anexar RAT</h3>
+            <input
+            id="file"
+            type="file"
+            accept=".png,.jpg,.jpeg,.pdf"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setSelectedCall({ ...selectedCall, file_url: file });
+              }
+            }}
+            className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+           />
           </div>
         </div>
 

@@ -20,7 +20,6 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireStaff = false }
   async function checkAuth() {
     try {
       const currentUser = await getCurrentUser();
-      console.log(currentUser);
       
       if (!currentUser) {
         navigate('/admin/login');

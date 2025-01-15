@@ -12,7 +12,7 @@ import { getServiceCalls } from '../../lib/api/service-calls';
 const AdminDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedCall, setSelectedCall] = useState<ServiceCall | null>();
-  const [serviceCalls, setServiceCalls] = useState<ServiceCall[]>([]);
+  const [serviceCalls, setServiceCalls] = useState<any[]>([]);
 
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedAnalyst, setSelectedAnalyst] = useState('');
@@ -24,9 +24,11 @@ const AdminDashboard = () => {
 
   const filteredCalls = useMemo(() => {
     return serviceCalls.filter((call) => {
-      const datetime = call.datetime || '';
+      const date = call.appointment_date || '';  
+      const month = date.split('-')[1];  
+  
       const monthMatch = selectedMonth 
-        ? datetime.split('-')[1] === selectedMonth 
+        ? month === selectedMonth.padStart(2, '0') 
         : true;
   
       const analystMatch = selectedAnalyst 
@@ -36,6 +38,8 @@ const AdminDashboard = () => {
       return monthMatch && analystMatch;
     });
   }, [serviceCalls, selectedMonth, selectedAnalyst]);
+  
+  
 
   useEffect(() => {
     const fetchServiceCalls = async () => {

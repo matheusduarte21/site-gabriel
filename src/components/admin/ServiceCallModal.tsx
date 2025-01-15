@@ -8,6 +8,7 @@ interface ServiceCallModalProps {
 }
 
 const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -52,6 +53,27 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
               </p>
             </div>
 
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Imagem RAT</h3>
+                {serviceCall.imageUrl ? (
+                  serviceCall.imageUrl.endsWith('pdf') ? (
+                    <iframe
+                      src={serviceCall.imageUrl}
+                      title="Documento relacionado à chamada de serviço"
+                      className="w-full h-96 rounded-lg"
+                    />
+                  ) : (
+                    <img
+                      src={serviceCall.imageUrl}
+                      className="w-full h-auto rounded-lg"
+                    />
+                  )
+                ) : (
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                    Nenhuma imagem disponível
+                  </p>
+                )}
+              </div>
           </div>
         </div>
       </div>

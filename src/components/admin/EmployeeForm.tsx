@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import { X } from "lucide-react";
 import { ListClientes } from "../../helpers/ListClients";
 import supabase from "../../lib/supabase";
+import { InsertImageRat } from "../../lib/api/service-calls";
 Modal.setAppElement("#root");
 
 interface EmployeeFormProps {
@@ -28,6 +29,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     expenses: "",
     solution: "",
     description: "",
+    image: null as File | null
   });
 
   
@@ -39,8 +41,40 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleInputFile = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, type, files } = e.target;
+  
+  
+    if (type === "file" && files) {
+      const file = files[0]; 
+      setFormData((prev) => ({ ...prev, image: file })); 
+    } else {
+      const value = e.target.value;
+      setFormData((prev) => ({ ...prev, [name]: value })); 
+    }
+  };
+
+  const updateImage = async () =>{
+    let filePath = null;
+      
+    if (formData.image) {
+        const imageUploadResponse = await InsertImageRat(formData.image);
+        filePath = imageUploadResponse?.path;
+    }
+    else{
+      console.log('erro na inserção')
+    }
+
+
+    return filePath;
+  }
+
   const handleSubmit =  async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const filePath = await updateImage();
 
     const { data, error } = await supabase
         .from('service_call')
@@ -62,6 +96,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             value_call: formData.valueCall ? parseFloat(formData.valueCall) : null,
             technicians: formData.technicians.trim(),
             notes: formData.notes || null,
+            file_url: filePath,
         }]);
 
     if (error) {
@@ -81,7 +116,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
       isOpen={true}
       onRequestClose={onClose}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-5 overflow-auto sm:overflow-hidden h-screen"
+      className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-5 overflow-y-scroll sm:overflow-y-scroll h-screen"
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Novo Registro</h2>
@@ -95,6 +130,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             <label className="block text-sm font-medium text-gray-900">Cliente</label>
             <select
               name="client"
+              required
               value={formData.client}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md min-w-0 py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
@@ -123,6 +159,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             <label className="block text-sm font-medium text-gray-900">Data agendada</label>
             <input
               type="date"
+              required
               name="appointmentDate"
               value={formData.appointmentDate}
               onChange={handleInputChange}
@@ -133,6 +170,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
           <div>
             <label className="block text-sm font-medium text-gray-900">Hora agendada</label>
             <input
+              required
               type="time"
               name="HourAppointment"
               value={formData.HourAppointment}
@@ -195,6 +233,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
           <div>
             <label className="block text-sm font-medium text-gray-900">Endereço (rua, n°, bairro)</label>
             <input
+              required
               type="text"
               name="address"
               value={formData.address}
@@ -244,6 +283,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             <label className="block text-sm font-medium text-gray-900">Status</label>
             <select
               name="status"
+              required
               value={formData.status}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
@@ -261,6 +301,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             <select
               name="technicians"
               value={formData.technicians}
+              required
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
@@ -287,6 +328,17 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             onChange={handleInputChange}
             className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900">Anexar RAT</label>
+          <input
+            id="file"
+            type="file"
+            accept=".png,.jpg,.jpeg,.pdf"
+            onChange={handleInputFile}
+            className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+           />
         </div>
 
         <div className="mt-6">
