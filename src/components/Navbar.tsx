@@ -22,7 +22,6 @@ const Navbar = () => {
             <span className="ml-2 text-xl font-bold text-gray-900">TechService</span>
           </div>
           
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <NavLink href="#home">Início</NavLink>
             <NavLink href="#services">Serviços</NavLink>
@@ -30,7 +29,6 @@ const Navbar = () => {
             <NavLink href="#clients">Clientes</NavLink>
             <NavLink href="#contact">Contato</NavLink>
             
-            {/* Login Selection */}
             <select
               onChange={handleLoginChange}
               className="px-4 py-2 text-sm bg-blue-50 text-blue-700 border-0 rounded-full 

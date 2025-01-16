@@ -6,7 +6,6 @@ export async function signIn(email: string, password: string) {
     password,
   });
 
-  console.log(data)
 
   if (error) throw error;
   return data;
