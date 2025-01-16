@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
-import photoTecnico from '../assests/util/tecnico.avif'
+import photoTecnico from '../assests/TECCORP LOGO/field-service.jpeg'
 
 const About = () => {
   return (

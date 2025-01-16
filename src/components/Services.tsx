@@ -6,7 +6,7 @@ const Services = () => {
     {
       icon: <Monitor />,
       title: 'Manutenção de Computadores',
-      description: 'Realizamos manutenção, configuração e instalação de equipamentos telefonia e internet'
+      description: 'Realizamos manutenção, configuração e instalação de equipamentos de telefonia e internet'
     },
     {
       icon: <Cpu />,
@@ -16,7 +16,7 @@ const Services = () => {
     {
       icon: <Settings />,
       title: 'Micro Informática',
-      description: 'Realizamos formação, configuração e instalação de  computadores e periféricos.'
+      description: 'Realizamos formatação, configuração e instalação de  computadores e periféricos.'
     },
     {
       icon:  <Wifi />,

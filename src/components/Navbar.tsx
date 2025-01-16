@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { Menu, X } from 'lucide-react';
-import logo from '../assests/TECCORP LOGO/4.png'
+import { Menu, X, Laptop } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const route = e.target.value;
+    if (route) {
+      navigate(route);
+    }
+  };
 
   return (
-    <nav className=" bg-blue-100 shadow-md fixed w-full z-50 ">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+    <nav className="bg-white shadow-md fixed w-full z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <span className="ml-2 text-xl font-bold text-gray-900">
-              <img className="h-[72px] mt-[18px] w-[250px] object-cover" src={logo} alt="" />
-            </span>
+            <Laptop className="h-8 w-8 text-blue-700" />
+            <span className="ml-2 text-xl font-bold text-gray-900">TechService</span>
           </div>
           
           {/* Desktop Menu */}
@@ -22,6 +29,19 @@ const Navbar = () => {
             <NavLink href="#about">Sobre Nós</NavLink>
             <NavLink href="#clients">Clientes</NavLink>
             <NavLink href="#contact">Contato</NavLink>
+            
+            {/* Login Selection */}
+            <select
+              onChange={handleLoginChange}
+              className="px-4 py-2 text-sm bg-blue-50 text-blue-700 border-0 rounded-full 
+                        hover:bg-blue-100 transition-colors duration-200 cursor-pointer 
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              defaultValue=""
+            >
+              <option value="" disabled>Área de login</option>
+              <option value="/admin/login">Admin</option>
+              <option value="/staff/login">Funcionário</option>
+            </select>
           </div>
 
           {/* Mobile Menu Button */}
@@ -45,6 +65,21 @@ const Navbar = () => {
             <MobileNavLink href="#about">Sobre Nós</MobileNavLink>
             <MobileNavLink href="#clients">Clientes</MobileNavLink>
             <MobileNavLink href="#contact">Contato</MobileNavLink>
+            
+            {/* Mobile Login Selection */}
+            <div className="px-3 py-2">
+              <select
+                onChange={handleLoginChange}
+                className="w-full px-4 py-2 text-sm bg-blue-50 text-blue-700 border-0 
+                          rounded-full hover:bg-blue-100 transition-colors duration-200 
+                          cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                defaultValue=""
+              >
+                <option value="" disabled>Área Restrita</option>
+                <option value="/admin/login">Admin</option>
+                <option value="/staff/login">Funcionário</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
