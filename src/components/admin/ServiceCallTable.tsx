@@ -15,11 +15,12 @@ interface ServiceCallTableProps {
 const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps) => {
   const headers = [
     "Data",
+    "Hora agendada",
     "Status",
     "Cliente",
     "Nº Chamado",
     "Técnico",
-    "Ações",
+    "Ações"
   ];
 
   const [selectedCall, setSelectedCall] = useState<any | string>("");
@@ -101,7 +102,10 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {(call.appointment_date)}
+                {new Date(call.appointment_date).toLocaleDateString('pt-BR')}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {call.hour_appointment}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <StatusBadge status={call.status} />
@@ -189,20 +193,24 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Cliente</label>
-              <select
-                value={selectedCall?.client}
-                onChange={(e) =>
-                  setSelectedCall({ ...selectedCall, client: e.target.value })
-                }
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="">Selecione</option>
-                {ListClientes.map((client) => (
-                  <option key={client.value} value={client.value}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
+              <input type="text"
+              value={selectedCall?.client}
+              onChange={(e) =>
+                setSelectedCall({ ...selectedCall, client: e.target.value })
+              }
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Empresa</label>
+              <input type="text"
+              value={selectedCall?.company}
+              onChange={(e) =>
+                setSelectedCall({ ...selectedCall, company: e.target.value })
+              }
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
             </div>
 
             <div>
@@ -243,9 +251,9 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Data/Hora Agendada</label>
+              <label className="block text-sm font-medium text-gray-700">Hora Agendada</label>
               <input
-                type="datetime-local"
+                type="date"
                 value={selectedCall?.appointment_date}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, appointment_date: e.target.value })
@@ -285,6 +293,18 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 value={selectedCall?.exit_time}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, exit_time: e.target.value })
+                }
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Horas totais</label>
+              <input
+                type="time"
+                value={selectedCall?.hour_total}
+                onChange={(e) =>
+                  setSelectedCall({ ...selectedCall, hour_total: e.target.value })
                 }
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
@@ -333,6 +353,18 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 value={selectedCall?.value_call}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, value_call: e.target.value })
+                }
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Hora extra</label>
+              <input
+                type="text"
+                value={selectedCall?.overtime}
+                onChange={(e) =>
+                  setSelectedCall({ ...selectedCall, overtime: e.target.value })
                 }
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />

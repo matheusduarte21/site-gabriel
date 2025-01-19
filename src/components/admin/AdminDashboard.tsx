@@ -16,16 +16,24 @@ const AdminDashboard = () => {
 
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedAnalyst, setSelectedAnalyst] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   const analysts = useMemo(() => {
     const uniqueAnalysts = new Set(serviceCalls.map((call) => call.technicians));
     return Array.from(uniqueAnalysts);
   }, [serviceCalls]);
 
+  const statusMap: { [key: string]: string } = {
+    '01': 'Agendado',
+    '02': 'Em Andamento',
+    '03': 'Cancelado',
+    '04': 'Concluído',
+  };
+  
   const filteredCalls = useMemo(() => {
     return serviceCalls.filter((call) => {
       const date = call.appointment_date || '';  
-      const month = date.split('-')[1];  
+      const month = date ? date.split('-')[1] : '';  
   
       const monthMatch = selectedMonth 
         ? month === selectedMonth.padStart(2, '0') 
@@ -35,9 +43,14 @@ const AdminDashboard = () => {
         ? call.technicians === selectedAnalyst 
         : true;
   
-      return monthMatch && analystMatch;
+      const statusMatch = selectedStatus 
+        ? call.status === statusMap[selectedStatus] 
+        : true;
+  
+      return monthMatch && analystMatch && statusMatch;
     });
-  }, [serviceCalls, selectedMonth, selectedAnalyst]);
+  }, [serviceCalls, selectedMonth, selectedAnalyst, selectedStatus]);
+  
   
   
 
@@ -73,9 +86,11 @@ const AdminDashboard = () => {
         <ServiceCallFilters
           selectedMonth={selectedMonth}
           selectedAnalyst={selectedAnalyst}
+          selectedStatus={selectedStatus}
           analysts={analysts}
           onMonthChange={setSelectedMonth}
           onAnalystChange={setSelectedAnalyst}
+          onStatusChange={setSelectedStatus}
         />
 
         <ServiceCallTable

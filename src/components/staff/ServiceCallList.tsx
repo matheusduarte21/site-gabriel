@@ -42,13 +42,13 @@ const ServiceCallList = ({ title, calls, badgeColor }: ServiceCallListProps) => 
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium text-gray-900">
-                      {call.client}
-                    </p>
                     <StatusIndicator status={call.status} />
+                    {/* <p className="text-sm font-medium text-gray-900">
+                      {call.company}
+                    </p> */}
                   </div>
                   <p className="text-sm text-gray-500">
-                    {call.ticketn_number} • {call.appointment_date}
+                   {call.status === 'Agendado' ? call.hour_appointment : ''} • {new Date(call.appointment_date).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
                 <div className="text-sm text-right">

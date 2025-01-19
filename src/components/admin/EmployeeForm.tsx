@@ -26,6 +26,10 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     StartTime: "",
     arrivalTime: "",
     valueCall:"",
+    totalValue:"",
+    overTime:"",
+    Company:"",
+    hourTotal:"",
     expenses: "",
     solution: "",
     description: "",
@@ -58,21 +62,26 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
 
   const updateImage = async () =>{
     let filePath = null;
-      
-    if (formData.image) {
-        const imageUploadResponse = await InsertImageRat(formData.image);
-        filePath = imageUploadResponse?.path;
-    }
-    else{
-      console.log('erro na inserção')
+
+    if(!formData.image){
+      return null
     }
 
+    try{
+      const imageUploadResponse = await InsertImageRat(formData.image);
+      filePath = imageUploadResponse?.path;
+    }
+    catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      return null;
+    }
 
     return filePath;
   }
 
   const handleSubmit =  async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     const filePath = await updateImage();
 
@@ -83,7 +92,6 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             client: formData.client.trim(),
             ticket_number: formData.ticketNumber.trim(),
             description: formData.description.trim(),
-            solution: formData.solution?.trim() || null,
             appointment_date: formData.appointmentDate,
             hour_appointment: formData.HourAppointment,
             arrival_time: formData.arrivalTime || null,
@@ -97,6 +105,10 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             technicians: formData.technicians.trim(),
             notes: formData.notes || null,
             file_url: filePath,
+            company: formData.Company,
+            total_value :formData.totalValue,
+            hour_total:formData.hourTotal || null,
+            overtime: formData.overTime
         }]);
 
     if (error) {
@@ -125,23 +137,39 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
         </button>
       </div>
       <form onSubmit={handleSubmit} className="grid gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border border-black p-5 rounded-[10px]">
+
           <div>
-            <label className="block text-sm font-medium text-gray-900">Cliente</label>
+            <label className="block text-sm font-medium text-gray-900">Técnicos</label>
             <select
-              name="client"
+              name="technicians"
+              value={formData.technicians}
               required
-              value={formData.client}
               onChange={handleInputChange}
-              className="mt-2 border-2 block w-full rounded-md min-w-0 py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             >
               <option value="">Selecione</option>
-              {ListClientes.map((client) => (
-                <option key={client.value} value={client.value}>
-                  {client.name}
-                </option>
-              ))}
+              <option value="ELISSAMA">ELISSAMA</option>
+              <option value="GABRIEL">GABRIEL</option>
+              <option value="LEONARDO">LEONARDO</option>
+              <option value="MARCUS">MARCUS</option>
+              <option value="DIOGO">DIOGO</option>
+              <option value="JUAN">JUAN</option>
+              <option value="JEFERSON">JEFERSON</option>
+              <option value="ROBSON">ROBSON</option>
+              <option value="THIAGO">THIAGO</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Empresa</label>
+            <input
+              type="text"
+              name="Company"
+              value={formData.Company}
+              onChange={handleInputChange}
+              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
           </div>
 
           <div>
@@ -155,6 +183,7 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             />
           </div>
 
+
           <div>
             <label className="block text-sm font-medium text-gray-900">Data agendada</label>
             <input
@@ -162,6 +191,17 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
               required
               name="appointmentDate"
               value={formData.appointmentDate}
+              onChange={handleInputChange}
+              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Cliente</label>
+            <input
+              type="text"
+              name="client"
+              value={formData.client}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
@@ -178,9 +218,55 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
+
+          
+          <div>
+              <label className="block text-sm font-medium text-gray-900">Retorno</label>
+              <select
+                name="returnVisit"
+                value={formData.returnVisit}
+                onChange={handleInputChange}
+                className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              >
+                <option value="">Selecione</option>
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-900">Status</label>
+              <select
+                name="status"
+                required
+                value={formData.status}
+                onChange={handleInputChange}
+                className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              >
+                <option value="">Selecione</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Agendado">Agendado</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-900">Endereço (rua, n°, bairro)</label>
+              <input
+                required
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+              />
+            </div>
+        
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 border border-black p-5 rounded-[10px] ">
           <div>
             <label className="block text-sm font-medium text-gray-900">Chegada no local</label>
             <input
@@ -215,46 +301,21 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900">Retorno</label>
-            <select
-              name="returnVisit"
-              value={formData.returnVisit}
-              onChange={handleInputChange}
-              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            >
-              <option value="">Selecione</option>
-              <option value="Sim">Sim</option>
-              <option value="Não">Não</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-900">Endereço (rua, n°, bairro)</label>
+            <label className="block text-sm font-medium text-gray-900">Hora total</label>
             <input
-              required
-              type="text"
-              name="address"
-              value={formData.address}
+              type="time"
+              name="hourTotal"
+              value={formData.hourTotal}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-900">Deslocamento</label>
-            <input
-              type="text"
-              name="distance"
-              value={formData.distance}
-              onChange={handleInputChange}
-              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            />
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+      <div className="border border-black p-5 rounded-[10px]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900">Despesas</label>
             <input
@@ -276,47 +337,45 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Deslocamento</label>
+            <input
+              type="text"
+              name="distance"
+              value={formData.distance}
+              onChange={handleInputChange}
+              className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-900">Status</label>
-            <select
-              name="status"
-              required
-              value={formData.status}
+            <label className="block text-sm font-medium text-gray-900">Valor total</label>
+            <input
+              type="text"
+              name="totalValue"
+              value={formData.totalValue}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            >
-              <option value="">Selecione</option>
-              <option value="Concluído">Concluído</option>
-              <option value="Agendado">Agendado</option>
-              <option value="Em Andamento">Em Andamento</option>
-              <option value="Cancelado">Cancelado</option>
-            </select>
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900">Técnicos</label>
-            <select
-              name="technicians"
-              value={formData.technicians}
-              required
+            <label className="block text-sm font-medium text-gray-900">Hora extra</label>
+            <input
+              type="text"
+              name="overTime"
+              value={formData.overTime}
               onChange={handleInputChange}
               className="mt-2 border-2 block w-full rounded-md py-1.5 pl-1 pr-3 text-base text-gray-900 border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-sm"
-            >
-              <option value="">Selecione</option>
-              <option value="ELISSAMA">ELISSAMA</option>
-              <option value="GABRIEL">GABRIEL</option>
-              <option value="LEONARDO">LEONARDO</option>
-              <option value="MARCUS">MARCUS</option>
-              <option value="DIOGO">DIOGO</option>
-              <option value="JUAN">JUAN</option>
-              <option value="JEFERSON">JEFERSON</option>
-              <option value="ROBSON">ROBSON</option>
-              <option value="THIAGO">THIAGO</option>
-            </select>
+            />
           </div>
+        </div>
+      </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         </div>
 
         <div>

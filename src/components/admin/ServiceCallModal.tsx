@@ -15,7 +15,7 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              Chamado {serviceCall.ticketNumber}
+              Chamado {serviceCall.ticket_number}
             </h2>
             <button
               onClick={onClose}
@@ -28,24 +28,22 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <InfoItem label="Status" value={serviceCall.status} />
-              <InfoItem label="Número do Chamado" value={serviceCall.ticket_number} />
-              <InfoItem label="Cliente" value={serviceCall.client} />
+              <InfoItem label="Número do Chamado" value={`${serviceCall.ticket_number ? serviceCall.ticket_number : 'Não atribuido'}`} />
+              <InfoItem label="Empresa" value={`${serviceCall.company ?  serviceCall.company : 'Não atribuido'}`} />
               <InfoItem label="técnico" value={serviceCall.technicians} />
-              <InfoItem
-                label="Data/Hora Agendada"
-                value={serviceCall.hour_appointment                }
-              />
               <InfoItem label="Hora Agendada" value={serviceCall.hour_appointment} />
-              <InfoItem label="Hora de Chegada" value={serviceCall.arrival_time!} />
-              <InfoItem label="Hora de Início" value={serviceCall.start_time!} />
-              <InfoItem label="Hora de Saída" value={serviceCall.exit_time!} />
-              <InfoItem label="Retorno" value={serviceCall.return_visit!} />
+              <InfoItem label="Hora de Chegada" value={`${serviceCall.arrival_time ? serviceCall.arrival_time!: 'Não atruibuido'}`} />
+              <InfoItem label="Hora de Início" value={`${serviceCall.start_time ? serviceCall.start_time : 'Não atribuido' }`} />
+              <InfoItem label="Hora de Saída" value={`${serviceCall.exit_time ? serviceCall.exit_time : 'Não atribuido'}`} />
+              <InfoItem label="Horas totais" value={`${serviceCall.hour_total ? serviceCall.hour_total : 'Não atribuido'}`} />
+              <InfoItem label="Retorno" value={`${serviceCall.return_visit ? serviceCall.return_visit : 'Não atribuido'}`} />
               <InfoItem label="Endereço" value={serviceCall.address} />
-              <InfoItem label="Distância" value={serviceCall.distance!} />
-              <InfoItem label="Despesas" value={serviceCall.expenses!} />
-              <InfoItem label="Valor do Chamado" value={serviceCall.value_call!} />
+              <InfoItem label="Distância" value={`${serviceCall.distance ? serviceCall.distance : 'Não atribuido'}`} />
+              <InfoItem label="Despesas" value={`R$ ${serviceCall.expenses ? serviceCall.expenses : 'R$ 0,00'}`} />
+              <InfoItem label="Valor do Chamado" value={` R$ ${serviceCall.value_call ? serviceCall.value_call : 'R$ 0,00'}`} />
+              <InfoItem label="Valor total" value={serviceCall.total_value!} />
+              <InfoItem label="Hora extra" value={serviceCall.overtime!} />
             </div>
-
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Descrição</h3>
               <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">

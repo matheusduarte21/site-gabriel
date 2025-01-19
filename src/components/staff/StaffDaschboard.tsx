@@ -19,7 +19,7 @@ const StaffDashboard = () => {
       };
     
       fetchServiceCalls();
-    }, []);
+  }, []);
 
     
   const inProgressCalls = serviceCalls.filter(call => call.status === 'Em Andamento');
