@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
 import { X } from "lucide-react";
-import { ListClientes } from "../../helpers/ListClients";
 import supabase from "../../lib/supabase";
 import { InsertImageRat } from "../../lib/api/service-calls";
 Modal.setAppElement("#root");

@@ -20,6 +20,25 @@ export async function getServiceCalls() {
 
 }
 
+export async function deleteItem  (itemId: string | number) {
+  try {
+    const { data, error } = await supabase
+      .from('service_call') 
+      .delete()
+      .eq('id', itemId); 
+
+    if (error) {
+      console.error('Erro ao excluir o item:', error.message);
+      return;
+    }
+    
+    console.log('Item excluído com sucesso:', data);
+  } catch (error) {
+    console.error('Erro desconhecido ao excluir o item:', error);
+  }
+};
+
+
 
 export async function UpdateServiceCalls(id: string,  dataUpdate: any ) {
   const { data, error } = await supabase

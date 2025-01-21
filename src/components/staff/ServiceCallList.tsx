@@ -48,7 +48,7 @@ const ServiceCallList = ({ title, calls, badgeColor }: ServiceCallListProps) => 
                     </p> */}
                   </div>
                   <p className="text-sm text-gray-500">
-                   {call.status === 'Agendado' ? call.hour_appointment : ''} • {new Date(call.appointment_date).toLocaleDateString('pt-BR')}
+                    {new Date(call.appointment_date).toLocaleDateString('pt-BR')} • {call.status === 'Agendado' ? call.hour_appointment : ''} 
                   </p>
                 </div>
                 <div className="text-sm text-right">
