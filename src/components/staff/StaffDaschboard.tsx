@@ -13,6 +13,7 @@ const StaffDashboard = () => {
         try {
           const calls = await getServiceCalls();
           setServiceCalls(calls);
+          console.log(calls);
         } catch (error) {
           console.error('Erro ao buscar chamados:', error);
         }

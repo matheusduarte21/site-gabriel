@@ -30,8 +30,6 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
     Company:"",
     hourTotal:"",
     expenses: "",
-    solution: "",
-    description: "",
     image: null as File | null
   });
 
@@ -90,7 +88,6 @@ const EmployeeForm = ({ onClose }: EmployeeFormProps) => {
             status: formData.status,
             client: formData.client.trim(),
             ticket_number: formData.ticketNumber.trim(),
-            description: formData.description.trim(),
             appointment_date: formData.appointmentDate,
             hour_appointment: formData.HourAppointment,
             arrival_time: formData.arrivalTime || null,

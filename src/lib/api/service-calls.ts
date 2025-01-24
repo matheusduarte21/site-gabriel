@@ -51,13 +51,13 @@ export async function UpdateServiceCalls(id: string,  dataUpdate: any ) {
 }
 
 export async function InsertImageRat(file: any) {
+
   const cleanFileName = (fileName: string) => {
     return fileName
       .toLowerCase()
-      .replace(/\s+/g, '-')  
-      .replace(/[^\w\-]+/g, '');
+      .replace(/\s+/g, '-') 
+      .replace(/[^a-z0-9\-_.]/g, '');
   };
-
   const filePath = `${cleanFileName(file.name)}`;
 
   const { data, error } = await supabase.storage

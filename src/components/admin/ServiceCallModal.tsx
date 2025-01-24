@@ -31,11 +31,12 @@ const ServiceCallModal = ({ serviceCall, onClose }: ServiceCallModalProps) => {
               <InfoItem label="Endereço" value={serviceCall.address || 'Não atribuído'} />
             </div>
   
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 border border-black p-5 rounded-[10px]">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-6 border border-black p-5 rounded-[10px]">
               <InfoItem label="Hora de Chegada" value={serviceCall.arrival_time || 'Não atribuído'} />
               <InfoItem label="Hora de Início" value={serviceCall.start_time || 'Não atribuído'} />
               <InfoItem label="Hora de Saída" value={serviceCall.exit_time || 'Não atribuído'} />
               <InfoItem label="Horas Totais" value={serviceCall.hour_total || 'Não atribuído'} />
+              <InfoItem label="Valor da chamada" value={`R$${serviceCall.value_call}`} />
             </div>
   
             <div className="grid grid-cols-1 border border-black p-5 rounded-[10px]">

@@ -23,8 +23,8 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
     "Ações"
   ];
 
-  const [selectedCall, setSelectedCall] = useState<any | string>("");
-  const [callDelete, setCallDelete] = useState<any | string>("")
+  const [selectedCall, setSelectedCall] = useState<any>();
+  const [callDelete, setCallDelete] = useState<any | string>('')
   const [isModalOpenDelte, setIsModalOpenDelete] = useState(false);
 
   const openEditModal = (call: ServiceCall) => {
@@ -36,7 +36,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
   }
   
   const closeEditModal = () => {
-    setSelectedCall(null);
+    setSelectedCall(false);
   };
 
   const handleDelete = async () => {
@@ -47,59 +47,69 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
 
   const handleUpdate = async () => {
     if (selectedCall) {
-      const { id, file_url } = selectedCall;
+      const {  file_url } = selectedCall;
+      const id = selectedCall?.id; 
       let fileUrl = file_url
 
       if (file_url instanceof File) {
+       
+        const sanitizedFileName = file_url.name
+          .toLowerCase()
+          .replace(/\s+/g, '-') 
+          .replace(/[^\w.\-]+/g, '');
+      
         const { data, error } = await supabase.storage
           .from('image_rat')  
-          .upload(`files/${file_url.name}`, file_url);
-  
+          .upload(`files/${sanitizedFileName}`, file_url);
+      
         if (error) {
-          console.error('Error uploading file:', error);
+          console.error('Erro ao fazer upload do arquivo:', error);
           return;
         }
-
+      
         fileUrl = data?.path;
+      
+        console.log('Upload realizado com sucesso. Caminho do arquivo:', fileUrl);
       }
       
-      const dataUpdate = {
-        status: selectedCall.status,
-        client: selectedCall.client,
-        ticket_number: selectedCall.ticket_number,
-        description: selectedCall.description,
-        appointment_date: selectedCall.appointment_date,
-        hour_appointment: selectedCall.hour_appointment,
-        arrival_time: selectedCall.arrival_time || null,
-        start_time: selectedCall.start_time || null,
-        exit_time: selectedCall.exit_time || null,
-        return_visit: selectedCall. return_visit || null,
-        address: selectedCall.address,
-        distance: selectedCall.distance || null,
-        expenses: selectedCall.expenses ? parseFloat(selectedCall.expenses) : null,
-        value_call: selectedCall.value_call ? parseFloat(selectedCall.value_call) : null,
-        technicians: selectedCall.technicians,
-        notes: selectedCall.notes || null,
-        file_url: fileUrl || null, 
-      };
+      const { data, error } = await supabase
+        .from('service_call')
+        .update({
+          status: selectedCall.status,
+          client: selectedCall.client,
+          ticket_number: selectedCall.ticket_number,
+          appointment_date: selectedCall.appointment_date,
+          hour_appointment: selectedCall.hour_appointment,
+          arrival_time: selectedCall.arrival_time ,
+          start_time: selectedCall.start_time,
+          exit_time: selectedCall.exit_time,
+          return_visit: selectedCall.return_visit,
+          address: selectedCall.address,
+          distance: selectedCall.distance,
+          expenses: selectedCall.expenses,
+          value_call: selectedCall.value_call,
+          technicians: selectedCall.technicians,
+          notes: selectedCall.notes,
+          file_url: fileUrl,
+          company: selectedCall.company,
+          total_value: selectedCall.total_value,
+          hour_total: selectedCall.hour_total,
+          overtime: selectedCall.overtime
+          })
+          .eq('id', id);
 
-      UpdateCall(id, dataUpdate);
+        if (error?.details) {
+          console.error('Erro ao atualizar o registro:', error);
+        } else {
+          console.log('Registro atualizado com sucesso:', data);
+        }
+        
+
       closeEditModal();
-      console.log(dataUpdate); 
     }
   };
   
-  const UpdateCall = (id: string, selectedCall: any) => {
-    const fetchUpdateCalls = async () => {
-      try {
-        await UpdateServiceCalls(id, selectedCall);
-      } catch (error) {
-        console.error('Erro ao buscar chamados:', error);
-      }
-    };
-  
-    fetchUpdateCalls();
-  };
+
 
   return (
     <div>
@@ -194,7 +204,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 <label className="block text-sm font-medium text-gray-700">Número do Chamado</label>
                 <input
                   type="text"
-                  value={selectedCall?.ticket_number}
+                  value={selectedCall?.ticket_number || ''}
                   onChange={(e) =>
                     setSelectedCall({ ...selectedCall, ticket_number: e.target.value })
                   }
@@ -205,7 +215,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
             <div>
               <label className="block text-sm font-medium text-gray-700">Status</label>
               <select
-                value={selectedCall?.status}
+                value={selectedCall?.status || ''}
                 onChange={(e) =>
                   setSelectedCall({
                     ...selectedCall,
@@ -225,7 +235,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
               <label className="block text-sm font-medium text-gray-700">Cliente</label>
               <input
                 type="text"
-                value={selectedCall?.client}
+                value={selectedCall?.client || ''}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, client: e.target.value })
                 }
@@ -237,7 +247,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
               <label className="block text-sm font-medium text-gray-700">Empresa</label>
               <input
                 type="text"
-                value={selectedCall?.company}
+                value={selectedCall?.company || ''}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, company: e.target.value })
                 }
@@ -248,7 +258,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
             <div>
               <label className="block text-sm font-medium text-gray-700">Retorno</label>
               <select
-                value={selectedCall?.return_visit}
+                value={selectedCall?.return_visit || ''}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, return_visit: e.target.value })
                 }
@@ -263,7 +273,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
             <div>
               <label className="block text-sm font-medium text-gray-700">Técnico</label>
               <select
-                value={selectedCall?.technicians}
+                value={selectedCall?.technicians || ''}
                 onChange={(e) =>
                   setSelectedCall({ ...selectedCall, technicians: e.target.value })
                 }
@@ -375,7 +385,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Despesas</label>
                     <input
-                      type="text"
+                      type="number"
                       value={selectedCall?.expenses}
                       onChange={(e) =>
                         setSelectedCall({ ...selectedCall, expenses: e.target.value })
@@ -387,7 +397,7 @@ const ServiceCallTable = ({ serviceCalls, onViewDetails}: ServiceCallTableProps)
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Valor do Chamado</label>
                   <input
-                    type="text"
+                    type="number"
                     value={selectedCall?.value_call}
                     onChange={(e) =>
                       setSelectedCall({ ...selectedCall, value_call: e.target.value })
