@@ -6,15 +6,21 @@
       }
     ],
     "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; connect-src 'self' https://villtmaldgntsecakmvk.supabase.co; script-src 'self'; style-src 'self';"
-        },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=()" }
-      ]
+      {
+        "source": "/(.*)",
+        "headers": [
+          { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-XSS-Protection", "value": "1; mode=block" },
+          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; connect-src 'self' https://villtmaldgntsecakmvk.supabase.co; img-src 'self' data: https://villtmaldgntsecakmvk.supabase.co; script-src 'self'; style-src 'self';"
+          },
+          { "key": "Referrer-Policy", "value": "no-referrer" },
+          { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=()" }
+        ]
+      }
+    ]
   }
+  
