@@ -5,8 +5,6 @@ import Services from './components/Services';
 import About from './components/About';
 import Clients from './components/Clients';
 import Contact from './components/Contact';
-import StaffDashboard from './components/staff/StaffDaschboard';
-import StaffLogin from './components/staff/StaffLogin';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminHome from './components/admin/AdminHome';
 import Clientes from './components/admin/Clientes';
