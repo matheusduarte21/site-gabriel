@@ -9,29 +9,20 @@ import AdminLayout from './components/admin/AdminLayout';
 import AdminHome from './components/admin/AdminHome';
 import Clientes from './components/admin/Clientes';
 import Tecnicos from './components/admin/Tecnicos';
-import Empresas from './components/admin/Empresas';
+import Chamados from './components/admin/chamados';
+import Usuarios from './components/admin/Usuarios';
 
 function App() {
   return (
     <Router>
       <Routes>
-
         <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminHome />} />
-            <Route path="empresas" element={<Empresas />} />
             <Route path="clientes" element={<Clientes />} />
             <Route path="tecnicos" element={<Tecnicos />} />
+            <Route path="chamados" element={<Chamados />} />
+            <Route path="usuarios" element={<Usuarios />} />
         </Route>
-        
-        {/* <Route path="/staff/login" element={<StaffLogin />} />
-        
-        <Route
-          path="/staff/dashboard"
-          element={
-            <StaffDashboard />
-          }
-        /> */}
-        
         <Route
           path="/"
           element={
@@ -45,6 +36,9 @@ function App() {
             </div>
           }
         />
+        
+        <Route path="*" element={<div className="p-10 text-center">Página não encontrada (404)</div>} />
+
       </Routes>
     </Router>
   );

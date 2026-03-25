@@ -1,9 +1,9 @@
-import { supabase } from "../../lib/supabase";
+import supabase from "../../lib/supabase";
 import { Cliente } from "../../types/cliente.type";
 
 export async function getTodosClientes(): Promise<Cliente[]> {
     const { data, error } = await supabase
-      .from('clientes')
+      .from('cliente')
       .select('*')
       .order('nome', { ascending: true })
 

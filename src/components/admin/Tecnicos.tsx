@@ -1,25 +1,58 @@
+import { useState, useEffect } from "react";
 import CrudPage from "./CrudPage";
+import { getTodosTecnicos } from "../../services/Tecnicos/get-all-tecnicos.service"; 
 
 const columns = [
     { key: "nome", label: "Nome" },
-    { key: "estado", label: "Estado" },
-    { key: "especialidade", label: "Especialidade" },
+    { key: "email_contato", label: "E-mail" },
     { key: "telefone", label: "Telefone" },
+    { key: "data_nascimento_formatada", label: "Nascimento" },
+    { key: "endereco", label: "Endereço" },
+    { key: "nome_municipio", label: "Município" }, 
+    { key: "nome_estado", label: "Estado" }, 
 ];
 
-const initialData = [
-    { id: "1", nome: "Gabriel Oliveira", estado: "SP", especialidade: "Redes", telefone: "(11) 98888-0001" },
-    { id: "2", nome: "Lucas Santos", estado: "RJ", especialidade: "Hardware", telefone: "(21) 98888-0002" },
-    { id: "3", nome: "Pedro Lima", estado: "MG", especialidade: "Software", telefone: "(31) 98888-0003" },
-];
+const Tecnicos = () => {
+    const [tecnicos, setTecnicos] = useState<any[]>([]);
 
-const Tecnicos = () => (
-    <CrudPage
-        title="Técnicos"
-        subtitle="Gerenciar técnicos cadastrados"
-        columns={columns}
-        initialData={initialData}
-    />
-);
+    useEffect(() => {
+        const fetchTecnicos = async () => {
+            try {
+                const dados = await getTodosTecnicos();
+                
+                const dadosFormatados = dados.map((tec: any) => {
+
+                    let dataFormatada = tec.data_nascimento;
+                    if (dataFormatada) {
+                        const [ano, mes, dia] = dataFormatada.split('-');
+                        dataFormatada = `${dia}/${mes}/${ano}`;
+                    }
+
+                    return {
+                        ...tec,
+                        nome_estado: tec.estado?.nome || "Não informado",
+                        nome_municipio: tec.municipio?.nome || "Não informado",
+                        data_nascimento_formatada: dataFormatada 
+                    };
+                });
+
+                setTecnicos(dadosFormatados);
+            } catch (error) {
+                console.error("Falha ao buscar técnicos no useEffect:", error);
+            }
+        };
+
+        fetchTecnicos();
+    }, []);
+
+    return (
+        <CrudPage
+            title="Técnicos"
+            subtitle="Gerenciar técnicos cadastrados"
+            columns={columns}
+            initialData={tecnicos} 
+        />
+    );
+};
 
 export default Tecnicos;
