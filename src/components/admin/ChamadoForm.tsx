@@ -63,6 +63,12 @@ const ChamadoForm = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!form.hora_agendamento) {
+            showError("A hora do agendamento é obrigatória!");
+            return;
+        }
+        
         onSubmit(form);
     };
 
@@ -223,12 +229,13 @@ const ChamadoForm = ({
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="hora_agendamento">Hora Agendamento</Label>
+                        <Label htmlFor="hora_agendamento">Hora Agendamento <span className="text-destructive">*</span></Label>
                         <Input
                             id="hora_agendamento"
                             type="time"
                             value={form.hora_agendamento || ""}
                             onChange={(e) => handleChange("hora_agendamento", e.target.value)}
+                            required 
                         />
                     </div>
                     <div className="space-y-1.5">
