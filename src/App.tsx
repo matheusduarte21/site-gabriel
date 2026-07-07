@@ -8,7 +8,7 @@ import Clients from './components/Clients';
 import Contact from './components/Contact';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminHome from './components/admin/AdminHome';
-import Chamados from './components/admin/Chamados';
+import Chamados from './components/admin/ChamadosTemp.';
 import Clientes from './components/admin/Clientes';
 import Tecnicos from './components/admin/Tecnicos';
 import Usuarios from './components/admin/Usuarios';
