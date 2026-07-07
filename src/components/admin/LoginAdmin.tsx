@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import supabase from "../../lib/supabase";
 
@@ -8,7 +7,6 @@ export default function LoginAdmin() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,24 +14,18 @@ export default function LoginAdmin() {
         setError("");
 
         try {
-            // Faz o login no Supabase
             const { error: authError } = await supabase.auth.signInWithPassword({
                 email, 
                 password,
             });
 
             if (authError) {
-                // Se der erro de senha/e-mail, mostramos o erro e paramos de carregar
                 setError("E-mail ou senha incorretos.");
                 setLoading(false);
             } else {
-                // Se der sucesso, NÃO damos setLoading(false).
-                // Por que? Porque vamos forçar o recarregamento da página.
-                // Se dermos false, o botão volta a ficar normal por 1 milissegundo antes da página piscar, o que é feio.
                 window.location.replace("/admin");
             }
         } catch (err) {
-            // Captura qualquer erro bizarro (ex: sem internet)
             setError("Ocorreu um erro inesperado ao tentar entrar.");
             setLoading(false);
         }
@@ -73,7 +65,7 @@ export default function LoginAdmin() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border"
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border text-gray-900 bg-white"
                         placeholder="admin@techservice.com.br"
                     />
                 </div>
@@ -93,7 +85,7 @@ export default function LoginAdmin() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border"
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border text-gray-900 bg-white"
                         placeholder="••••••••"
                     />
                 </div>
