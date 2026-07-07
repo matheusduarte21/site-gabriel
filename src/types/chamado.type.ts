@@ -6,7 +6,6 @@ export interface Chamado {
     numero_chamado: string;
     retorno: boolean;
     endereco: string;
-    descricao: string;
     observacoes: string;
     url_arquivo: string;
     data_agendamento: string;
@@ -33,7 +32,6 @@ export const emptyChamado: Chamado = {
     numero_chamado: "",
     retorno: false,
     endereco: "",
-    descricao: "",
     observacoes: "",
     url_arquivo: "",
     data_agendamento: "",

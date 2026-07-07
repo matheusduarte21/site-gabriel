@@ -1,11 +1,12 @@
 import supabase from "../../lib/supabase";
 
-export async function criarCliente(cliente: any): Promise<any> {
-    const { id, ...payload } = cliente;
+export async function atualizarCliente(id: string | number, cliente: any): Promise<any> {
+    const { id: _id, ...payload } = cliente;
 
     const { data, error } = await supabase
         .from('cliente')
-        .insert([payload])
+        .update(payload)
+        .eq('id', id)
         .select()
         .single();
 
