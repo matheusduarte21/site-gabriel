@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
     LayoutDashboard,
     Users,
@@ -6,7 +7,9 @@ import {
     ClipboardList,
     User2,
     UserCircle,
-    LogOut
+    LogOut,
+    Sun,
+    Moon
 } from "lucide-react";
 import { logoutUsuario } from "../../services/auth/auth-logout.service";
 
@@ -21,6 +24,22 @@ const navItems = [
 
 const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
     const navigate = useNavigate();
+    
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const temaSalvo = localStorage.getItem("tema-sistema");
+        return temaSalvo !== "light";
+    });
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (isDarkMode) {
+            root.classList.add("dark");
+            localStorage.setItem("tema-sistema", "dark");
+        } else {
+            root.classList.remove("dark");
+            localStorage.setItem("tema-sistema", "light");
+        }
+    }, [isDarkMode]);
 
     const handleLogout = async () => {
         try {
@@ -65,7 +84,26 @@ const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
                 ))}
             </nav>
 
-            <div className="border-t border-border p-4 mt-auto">
+            <div className="border-t border-border p-4 mt-auto flex flex-col gap-2">
+                
+                {/* Botão de Alternar Tema */}
+                <button 
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                    {isDarkMode ? (
+                        <>
+                            <Sun className="h-5 w-5" />
+                            Modo Claro
+                        </>
+                    ) : (
+                        <>
+                            <Moon className="h-5 w-5" />
+                            Modo Escuro
+                        </>
+                    )}
+                </button>
+
                 <button 
                     onClick={handleLogout}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
