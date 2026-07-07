@@ -19,7 +19,6 @@ const AdminLayout = () => {
                 </button>
             </header>
 
-            {/* --- OVERLAY ESCURO --- */}
             {sidebarAberta && (
                 <div 
                     className="fixed inset-0 z-40 bg-black/50 lg:hidden"
