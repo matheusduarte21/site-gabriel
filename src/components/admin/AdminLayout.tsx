@@ -8,6 +8,7 @@ const AdminLayout = () => {
 
     return (
         <div className="min-h-screen bg-background">
+            
             <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
                 <span className="font-bold text-foreground">Teccorp</span>
                 <button 
@@ -18,6 +19,7 @@ const AdminLayout = () => {
                 </button>
             </header>
 
+            {/* --- OVERLAY ESCURO --- */}
             {sidebarAberta && (
                 <div 
                     className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -29,7 +31,7 @@ const AdminLayout = () => {
                 <AdminSidebar fecharMenu={() => setSidebarAberta(false)} />
             </div>
 
-            <main className="min-h-screen w-full overflow-x-hidden p-4 lg:ml-64 lg:p-6">
+            <main className="min-h-screen overflow-x-hidden p-4 lg:ml-64 lg:p-6">
                 <Outlet />
             </main>
             
