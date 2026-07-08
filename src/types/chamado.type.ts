@@ -13,16 +13,21 @@ export interface Chamado {
     hora_chegada: string;
     hora_inicio: string;
     hora_fim: string;
-    hora_total: string;
-    hora_extra: string;
-    despesas: string;
-    valor_chamado: number | string;
-    valor_total: number | string;
-    data_criacao?: string;
-    valor_faturado: number | string;
-    valor_pago: number | string;
-    valor_ganho: number | string;
+    hora_total: string | null;
+    hora_extra: string | null;
     empresa: string;
+    data_criacao?: string;
+    hora_total_str?: string;
+    valor_chamado_cliente?: number | string;
+    hora_extra_cliente?: number | string;
+    deslocamento_cliente?: number | string;
+    reembolso_cliente?: number | string;
+    valor_total_cliente?: number | string;
+    valor_chamado_tecnico?: number | string;
+    hora_extra_tecnico?: number | string;
+    deslocamento_tecnico?: number | string;
+    reembolso_tecnico?: number | string;
+    valor_total_tecnico?: number | string;
 }
 
 export const emptyChamado: Chamado = {
@@ -39,13 +44,18 @@ export const emptyChamado: Chamado = {
     hora_chegada: "",
     hora_inicio: "",
     hora_fim: "",
-    hora_total: "",
-    hora_extra: "",
-    despesas: "",
-    valor_chamado: "",
-    valor_total: "",
-    valor_faturado: "",
-    valor_pago: "",
-    valor_ganho: "",
+    hora_total: null,
+    hora_extra: null,
     empresa: "",
+    hora_total_str: "",
+    valor_chamado_cliente: "",
+    hora_extra_cliente: "",
+    deslocamento_cliente: "",
+    reembolso_cliente: "",
+    valor_total_cliente: "",
+    valor_chamado_tecnico: "",
+    hora_extra_tecnico: "",
+    deslocamento_tecnico: "",
+    reembolso_tecnico: "",
+    valor_total_tecnico: "",
 };
