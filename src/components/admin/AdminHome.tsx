@@ -186,21 +186,19 @@ const AdminHome = () => {
                             chamadosAgendadosPaginados.map((chamado) => (
                                 <div
                                     key={chamado.id}
-                                    className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                                    className="flex items-center justify-between rounded-lg border border-sky-500/15 bg-sky-500/10 px-4 py-3 transition-colors hover:bg-sky-500/15"
                                 >
-                                    <div>
-                                        <p className="text-sm font-medium text-foreground">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-bold text-sky-400">
                                             {chamado.numero_chamado || "Sem número"}
                                         </p>
 
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs font-medium text-foreground">
                                             {chamado.empresa || "Empresa não informada"}
                                         </p>
-
-                                        
                                     </div>
 
-                                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
                                         Em andamento
                                     </span>
                                 </div>
@@ -288,16 +286,22 @@ const AdminHome = () => {
                         )}
 
                         {!loadingEmpresas &&
-                            empresas.map((empresa) => (
+                            empresas.map((empresa, index) => (
                                 <div
                                     key={empresa.empresa}
-                                    className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                                    className="flex items-center justify-between rounded-lg border border-primary/15 bg-primary/10 px-4 py-3 transition-colors hover:bg-primary/15"
                                 >
-                                    <span className="text-sm font-medium text-foreground">
-                                        {empresa.empresa}
-                                    </span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                                            {(pageEmpresas - 1) * limit + index + 1}
+                                        </span>
 
-                                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                        <span className="text-sm font-semibold text-foreground">
+                                            {empresa.empresa}
+                                        </span>
+                                    </div>
+
+                                    <span className="rounded-full bg-primary/20 px-3 py-1 text-xs font-bold text-primary">
                                         {empresa.chamados} chamados
                                     </span>
                                 </div>
@@ -388,10 +392,10 @@ const AdminHome = () => {
                             tecnicos.map((tecnico) => (
                                 <div
                                     key={tecnico.tecnico_id}
-                                    className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                                    className="flex items-center justify-between rounded-lg border border-emerald-500/15 bg-emerald-500/10 px-4 py-3 transition-colors hover:bg-emerald-500/15"
                                 >
                                     <div>
-                                        <p className="text-sm font-medium text-foreground">
+                                        <p className="text-sm font-semibold text-foreground">
                                             {tecnico.nome}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
@@ -399,16 +403,33 @@ const AdminHome = () => {
                                         </p>
                                     </div>
 
-                                    <div className="text-right">
-                                        <p className="text-sm font-bold text-success">
-                                            {formatCurrency(tecnico.lucro)}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Faturado: {formatCurrency(tecnico.faturado)}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Pago: {formatCurrency(tecnico.pago)}
-                                        </p>
+                                    <div className="grid grid-cols-3 gap-4 text-right">
+                                        <div>
+                                            <p className="text-[11px] font-medium text-muted-foreground">
+                                                Lucro
+                                            </p>
+                                            <p className="text-sm font-bold text-emerald-400">
+                                                {formatCurrency(tecnico.lucro)}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[11px] font-medium text-muted-foreground">
+                                                Faturado
+                                            </p>
+                                            <p className="text-sm font-bold text-sky-400">
+                                                {formatCurrency(tecnico.faturado)}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[11px] font-medium text-muted-foreground">
+                                                Pago
+                                            </p>
+                                            <p className="text-sm font-bold text-amber-400">
+                                                {formatCurrency(tecnico.pago)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
