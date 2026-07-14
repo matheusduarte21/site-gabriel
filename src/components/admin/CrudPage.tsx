@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Eye, FileText, Inbox } from "lucide-react";
 import { Button } from "../ui/Button";
@@ -169,7 +170,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
             placeholder="Pesquisar por código ou descrição"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-none border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+            className="w-full rounded-xl border border-input bg-card shadow-sm py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
           />
           {search && (
             <button
@@ -180,14 +181,14 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
             </button>
           )}
         </div>
-        <Button onClick={handleNew} className="gap-2">
+        <Button onClick={handleNew} className="gap-2 shadow-sm rounded-lg">
           <Plus className="h-4 w-4" />
           Novo registro
         </Button>
       </div>
 
       <Dialog open={showForm} onOpenChange={(isOpen) => !isOpen && closeForm()}>
-        <DialogContent className={`${modalMaxWidth} max-h-[85vh] overflow-y-auto rounded-none`}>
+        <DialogContent className={`${modalMaxWidth} max-h-[85vh] overflow-y-auto rounded-xl shadow-lg border-border`}>
           <DialogHeader>
             <DialogTitle>{editingId ? "Editar" : "Novo"} registro</DialogTitle>
             <DialogDescription>
@@ -216,7 +217,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
                       <select
                         value={formData[col.key] || ""}
                         onChange={(e) => setFormData((p) => ({ ...p, [col.key]: e.target.value }))}
-                        className="w-full rounded-none border border-input bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary appearance-none"
+                        className="w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary appearance-none shadow-sm"
                       >
                         <option value="" disabled>Selecione {col.label.toLowerCase()}...</option>
                         {col.options?.map((opt) => (
@@ -231,7 +232,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
                         value={formData[col.key] || ""}
                         onChange={(e) => setFormData((p) => ({ ...p, [col.key]: e.target.value }))}
                         placeholder={`Digite ${col.label.toLowerCase()}...`}
-                        className="w-full rounded-none border border-input bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                        className="w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary shadow-sm"
                       />
                     )}
                   </div>
@@ -239,10 +240,10 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
               </div>
 
               <div className="mt-6 flex gap-3 border-t border-border pt-5">
-                <Button onClick={handleSaveDefault} disabled={isSaving}>
+                <Button onClick={handleSaveDefault} disabled={isSaving} className="rounded-lg">
                   {editingId ? "Atualizar" : "Salvar"}
                 </Button>
-                <Button variant="outline" onClick={closeForm} disabled={isSaving}>
+                <Button variant="outline" onClick={closeForm} disabled={isSaving} className="rounded-lg">
                   Cancelar
                 </Button>
               </div>
@@ -252,7 +253,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
       </Dialog>
 
       <Dialog open={showDetailsModal} onOpenChange={(isOpen) => !isOpen && closeDetails()}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-none">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl shadow-lg border-border">
               <DialogHeader>
                   <DialogTitle>Detalhes do Registro</DialogTitle>
               </DialogHeader>
@@ -278,7 +279,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
                               <p className="text-sm font-semibold text-muted-foreground mb-3">Documento Anexado</p>
                               <Button 
                                 variant="outline" 
-                                className="w-full sm:w-auto gap-2"
+                                className="w-full sm:w-auto gap-2 rounded-lg"
                                 onClick={() => handleOpenDocument(selectedItem.url_arquivo)}
                               >
                                   <FileText className="h-4 w-4" />
@@ -291,17 +292,17 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
           </DialogContent>
       </Dialog>
 
-      <div className="overflow-hidden rounded-none border border-border bg-card">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
                 {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th key={col.key} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {col.label}
                   </th>
                 ))}
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Ações
                 </th>
               </tr>
@@ -332,7 +333,7 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
                 </tr>
               ) : (
                 paginatedItems.map((item) => (
-                  <tr key={item.id} className="transition-colors hover:bg-muted/20">
+                  <tr key={item.id} className="transition-colors hover:bg-muted/30">
                     {columns.map((col) => (
                       <td key={col.key} className="whitespace-nowrap px-5 py-4 text-sm text-foreground">
                         {item[col.key] === null || item[col.key] === undefined || item[col.key] === ""
@@ -344,13 +345,13 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
                     ))}
                     <td className="whitespace-nowrap px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleViewDetails(item)} title="Ver Detalhes" className="rounded-none p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
+                        <button onClick={() => handleViewDetails(item)} title="Ver Detalhes" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleEdit(item)} title="Editar" className="rounded-none p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
+                        <button onClick={() => handleEdit(item)} title="Editar" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDeleteClick(item.id)} title="Excluir" className="rounded-none p-2 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive">
+                        <button onClick={() => handleDeleteClick(item.id)} title="Excluir" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -363,20 +364,20 @@ const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, Cu
         </div>
 
         {!internalLoading && totalPages > 1 && (
-          <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-border bg-card/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-muted-foreground">
               Mostrando <span className="font-medium text-foreground">{startIndex + 1}</span> a <span className="font-medium text-foreground">{Math.min(endIndex, filtered.length)}</span> de <span className="font-medium text-foreground">{filtered.length}</span> resultados
             </span>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 w-8 p-0">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 w-8 rounded-lg p-0">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="h-8 w-8 p-0 text-xs">
+                <Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="h-8 w-8 rounded-lg p-0 text-xs">
                   {page}
                 </Button>
               ))}
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-8 w-8 p-0">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-8 w-8 rounded-lg p-0">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
