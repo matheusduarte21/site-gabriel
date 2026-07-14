@@ -1,115 +1,296 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import {
-    LayoutDashboard,
-    Users,
-    Wrench,
+    NavLink,
+    useNavigate,
+} from "react-router-dom";
+import {
+    useEffect,
+    useState,
+} from "react";
+import {
+    ChevronUp,
     ClipboardList,
+    LayoutDashboard,
+    Loader2,
+    LogOut,
+    Moon,
+    Settings,
+    Sun,
     User2,
     UserCircle,
-    LogOut,
-    Sun,
-    Moon
+    Users,
+    Wrench,
+    X,
 } from "lucide-react";
 import { logoutUsuario } from "../../services/auth/auth-logout.service";
+import teccorpLogo from "../../assests/TECCORP LOGO/2.png";
 
 const navItems = [
-    { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-    { to: "/admin/clientes", icon: Users, label: "Clientes" },
-    { to: "/admin/tecnicos", icon: Wrench, label: "Técnicos" },
-    { to: "/admin/chamados", icon: ClipboardList, label: "Chamados" },
-    { to: "/admin/usuarios", icon: User2, label: "Usuários" },
-    { to: "/admin/perfil", icon: UserCircle, label: "Perfil" },
+    {
+        to: "/admin",
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        end: true,
+    },
+    {
+        to: "/admin/clientes",
+        icon: Users,
+        label: "Clientes",
+    },
+    {
+        to: "/admin/tecnicos",
+        icon: Wrench,
+        label: "Técnicos",
+    },
+    {
+        to: "/admin/chamados",
+        icon: ClipboardList,
+        label: "Chamados",
+    },
+    {
+        to: "/admin/usuarios",
+        icon: User2,
+        label: "Usuários",
+    },
+    {
+        to: "/admin/perfil",
+        icon: UserCircle,
+        label: "Perfil",
+    },
 ];
 
-const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
+interface AdminSidebarProps {
+    fecharMenu?: () => void;
+}
+
+const AdminSidebar = ({
+    fecharMenu,
+}: AdminSidebarProps) => {
     const navigate = useNavigate();
-    
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        const temaSalvo = localStorage.getItem("tema-sistema");
-        return temaSalvo !== "light";
-    });
+
+    const [isDarkMode, setIsDarkMode] =
+        useState(() => {
+            return (
+                localStorage.getItem(
+                    "tema-sistema"
+                ) === "dark"
+            );
+        });
+
+    const [
+        configuracoesAbertas,
+        setConfiguracoesAbertas,
+    ] = useState(false);
+
+    const [isLoggingOut, setIsLoggingOut] =
+        useState(false);
 
     useEffect(() => {
-        const root = window.document.documentElement;
-        if (isDarkMode) {
-            root.classList.add("dark");
-            localStorage.setItem("tema-sistema", "dark");
-        } else {
-            root.classList.remove("dark");
-            localStorage.setItem("tema-sistema", "light");
-        }
+        const root =
+            window.document.documentElement;
+
+        root.classList.toggle(
+            "dark",
+            isDarkMode
+        );
+
+        localStorage.setItem(
+            "tema-sistema",
+            isDarkMode ? "dark" : "light"
+        );
     }, [isDarkMode]);
 
+    const handleNavClick = () => {
+        setConfiguracoesAbertas(false);
+        fecharMenu?.();
+    };
+
     const handleLogout = async () => {
+        if (isLoggingOut) {
+            return;
+        }
+
         try {
+            setIsLoggingOut(true);
+
             await logoutUsuario();
-            navigate("/admin/login");
+
+            fecharMenu?.();
+
+            navigate("/admin/login", {
+                replace: true,
+            });
         } catch (error) {
-            console.error("Falha ao encerrar a sessão:", error);
+            console.error(
+                "Falha ao encerrar a sessão:",
+                error
+            );
+        } finally {
+            setIsLoggingOut(false);
         }
     };
 
     return (
-        <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl lg:shadow-none">
-            
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-                    <Wrench className="h-5 w-5 text-sidebar-primary-foreground" />
-                </div>
-                <div>
-                    <h1 className="text-sm font-bold text-sidebar-foreground">Teccorp</h1>
-                    <p className="text-xs text-sidebar-foreground/70">Campo & Tecnologia</p>
-                </div>
+        <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl lg:shadow-none">
+            <div className="relative flex h-20 shrink-0 items-center justify-center border-b border-sidebar-border px-5">
+                <img
+                    src={teccorpLogo}
+                    alt="Teccorp"
+                    className=" w-auto max-w-[175px] object-cover "
+                />
+
+                {fecharMenu && (
+                    <button
+                        type="button"
+                        onClick={fecharMenu}
+                        aria-label="Fechar menu"
+                        className="absolute right-3 flex h-9 w-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                )}
             </div>
-            
-            <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+
+            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+                <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">
+                    Navegação
+                </p>
+
                 {navItems.map((item) => (
                     <NavLink
                         key={item.to}
                         to={item.to}
                         end={item.end}
-                        onClick={fecharMenu}
+                        onClick={handleNavClick}
                         className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                                isActive 
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                                isActive
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                             }`
                         }
                     >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
+                        {({ isActive }) => (
+                            <>
+                                <span
+                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                        isActive
+                                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                                            : "bg-sidebar-accent/40 text-sidebar-foreground/70 group-hover:bg-sidebar-accent group-hover:text-sidebar-accent-foreground"
+                                    }`}
+                                >
+                                    <item.icon className="h-4 w-4" />
+                                </span>
+
+                                <span>
+                                    {item.label}
+                                </span>
+                            </>
+                        )}
                     </NavLink>
                 ))}
             </nav>
 
-            <div className="border-t border-sidebar-border p-4 mt-auto flex flex-col gap-2">
-                
-                {/* Botão de Alternar Tema */}
-                <button 
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            <div className="mt-auto border-t border-sidebar-border p-3">
+                {configuracoesAbertas && (
+                    <div className="mb-2 rounded-xl border border-sidebar-border bg-sidebar-accent/20 p-3 shadow-lg">
+                        <div className="mb-3">
+                            <p className="text-xs font-bold text-sidebar-foreground">
+                                Aparência
+                            </p>
+
+                            <p className="mt-0.5 text-[11px] text-sidebar-foreground/50">
+                                Escolha o tema do sistema
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsDarkMode(false)
+                                }
+                                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                    !isDarkMode
+                                        ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
+                                        : "border-sidebar-border bg-sidebar/50 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }`}
+                            >
+                                <Sun className="h-4 w-4" />
+                                Claro
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsDarkMode(true)
+                                }
+                                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                    isDarkMode
+                                        ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
+                                        : "border-sidebar-border bg-sidebar/50 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }`}
+                            >
+                                <Moon className="h-4 w-4" />
+                                Escuro
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        setConfiguracoesAbertas(
+                            (aberta) => !aberta
+                        )
+                    }
+                    aria-expanded={
+                        configuracoesAbertas
+                    }
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                        configuracoesAbertas
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    }`}
                 >
-                    {isDarkMode ? (
-                        <>
-                            <Sun className="h-5 w-5" />
-                            Modo Claro
-                        </>
-                    ) : (
-                        <>
-                            <Moon className="h-5 w-5" />
-                            Modo Escuro
-                        </>
-                    )}
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/50">
+                        <Settings className="h-4 w-4" />
+                    </span>
+
+                    <span className="flex-1 text-left">
+                        Aparência
+                    </span>
+
+                    <ChevronUp
+                        className={`h-4 w-4 transition-transform ${
+                            configuracoesAbertas
+                                ? "rotate-0"
+                                : "rotate-180"
+                        }`}
+                    />
                 </button>
 
-                <button 
+                <div className="my-2 border-t border-sidebar-border" />
+
+                <button
+                    type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                    disabled={isLoggingOut}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    <LogOut className="h-5 w-5" />
-                    Sair
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
+                        {isLoggingOut ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <LogOut className="h-4 w-4" />
+                        )}
+                    </span>
+
+                    <span>
+                        {isLoggingOut
+                            ? "Encerrando sessão..."
+                            : "Encerrar sessão"}
+                    </span>
                 </button>
             </div>
         </aside>
