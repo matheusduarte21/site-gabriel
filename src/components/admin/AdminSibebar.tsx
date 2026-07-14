@@ -51,15 +51,15 @@ const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
     };
 
     return (
-        <aside className="flex h-screen w-64 flex-col border-r border-border bg-card text-foreground shadow-xl lg:shadow-none">
+        <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl lg:shadow-none">
             
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                    <Wrench className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-6">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
+                    <Wrench className="h-5 w-5 text-sidebar-primary-foreground" />
                 </div>
                 <div>
-                    <h1 className="text-sm font-bold text-foreground">Teccorp</h1>
-                    <p className="text-xs text-muted-foreground/70">Campo & Tecnologia</p>
+                    <h1 className="text-sm font-bold text-sidebar-foreground">Teccorp</h1>
+                    <p className="text-xs text-sidebar-foreground/70">Campo & Tecnologia</p>
                 </div>
             </div>
             
@@ -73,8 +73,8 @@ const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
                         className={({ isActive }) =>
                             `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                                 isActive 
-                                ? "bg-secondary text-secondary-foreground" 
-                                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                             }`
                         }
                     >
@@ -84,12 +84,12 @@ const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
                 ))}
             </nav>
 
-            <div className="border-t border-border p-4 mt-auto flex flex-col gap-2">
+            <div className="border-t border-sidebar-border p-4 mt-auto flex flex-col gap-2">
                 
                 {/* Botão de Alternar Tema */}
                 <button 
                     onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
                     {isDarkMode ? (
                         <>
@@ -106,7 +106,7 @@ const AdminSidebar = ({ fecharMenu }: { fecharMenu?: () => void }) => {
 
                 <button 
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
                 >
                     <LogOut className="h-5 w-5" />
                     Sair

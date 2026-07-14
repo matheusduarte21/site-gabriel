@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    --background: 215 28% 94%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 98%;
+    --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 0 0% 98%;
+    --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
     --primary: 211 88% 43%;
@@ -33,6 +33,15 @@
     --ring: 211 88% 43%;
 
     --radius: 0.5rem;
+
+    --sidebar-background: 200 80% 12%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 207 90% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 70% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 200 80% 10%;
+    --sidebar-ring: 211 88% 43%;
   }
 
   .dark {
