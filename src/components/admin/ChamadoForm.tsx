@@ -42,6 +42,33 @@ const ChamadoForm = ({
         }
     }, [initialData]);
 
+    useEffect(() => {
+        const parseNum = (val: any) => parseFloat(val) || 0;
+
+        const totalCliente = 
+            parseNum(form.valor_chamado_cliente) + 
+            parseNum(form.hora_extra_cliente) + 
+            parseNum(form.deslocamento_cliente) + 
+            parseNum(form.reembolso_cliente);
+
+        const totalTecnico = 
+            parseNum(form.valor_chamado_tecnico) + 
+            parseNum(form.hora_extra_tecnico) + 
+            parseNum(form.deslocamento_tecnico) + 
+            parseNum(form.reembolso_tecnico);
+
+        if (form.valor_total_cliente !== totalCliente || form.valor_total_tecnico !== totalTecnico) {
+            setForm(prev => ({
+                ...prev,
+                valor_total_cliente: totalCliente,
+                valor_total_tecnico: totalTecnico
+            }));
+        }
+    }, [
+        form.valor_chamado_cliente, form.hora_extra_cliente, form.deslocamento_cliente, form.reembolso_cliente,
+        form.valor_chamado_tecnico, form.hora_extra_tecnico, form.deslocamento_tecnico, form.reembolso_tecnico
+    ]);
+
     const handleChange = (field: keyof Chamado, value: string | boolean | number) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
@@ -63,16 +90,35 @@ const ChamadoForm = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(form);
+
+        if (!form.hora_agendamento) {
+            showError("A hora do agendamento é obrigatória!");
+            return;
+        }
+
+        const dadosLimpos = { ...form };
+
+        const camposTime: Array<"hora_total" | "hora_extra"> = [
+            "hora_total",
+            "hora_extra",
+        ];
+
+        camposTime.forEach((campo) => {
+            if (dadosLimpos[campo] === "") {
+            delete dadosLimpos[campo];
+            }
+        });
+
+        onSubmit(dadosLimpos);
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground border-b border-border pb-1 mb-6">
+            <div className="rounded-xl border border-border bg-card/40 p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 mb-5">
                     Informações Principais
                 </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div className="space-y-1.5">
                         <Label htmlFor="numero_chamado">Número do Chamado</Label>
                         <Input
@@ -163,11 +209,11 @@ const ChamadoForm = ({
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground border-b border-border pb-1 mb-6">
+            <div className="rounded-xl border border-border bg-card/40 p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 mb-5">
                     Localização e Documentos
                 </h3>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-5">
                     <div className="space-y-1.5">
                         <Label htmlFor="endereco">Endereço</Label>
                         <Input
@@ -196,11 +242,12 @@ const ChamadoForm = ({
                                 type="file"
                                 onChange={handleFileChange}
                                 disabled={isUploading}
+                                className="cursor-pointer"
                             />
                             {isUploading && <span className="text-sm text-muted-foreground">Enviando...</span>}
                         </div>
                         {form.url_arquivo && (
-                            <div className="mt-2 text-sm text-green-600">
+                            <div className="mt-2 text-sm text-green-600 font-medium">
                                 ✓ Arquivo anexado com sucesso
                             </div>
                         )}
@@ -208,11 +255,11 @@ const ChamadoForm = ({
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground border-b border-border pb-1 mb-6">
+            <div className="rounded-xl border border-border bg-card/40 p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 mb-5">
                     Agendamento e Horários
                 </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-1.5">
                         <Label htmlFor="data_agendamento">Data Agendamento</Label>
                         <Input
@@ -223,12 +270,13 @@ const ChamadoForm = ({
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="hora_agendamento">Hora Agendamento</Label>
+                        <Label htmlFor="hora_agendamento">Hora Agendamento <span className="text-destructive">*</span></Label>
                         <Input
                             id="hora_agendamento"
                             type="time"
                             value={form.hora_agendamento || ""}
                             onChange={(e) => handleChange("hora_agendamento", e.target.value)}
+                            required 
                         />
                     </div>
                     <div className="space-y-1.5">
@@ -259,105 +307,144 @@ const ChamadoForm = ({
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="hora_total">Hora Total</Label>
+                        <Label htmlFor="hora_total_str">Tempo Total</Label>
                         <Input
-                            id="hora_total"
+                            id="hora_total_str"
                             type="time"
-                            value={form.hora_total || ""}
-                            onChange={(e) => handleChange("hora_total", e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="hora_extra">Hora Extra</Label>
-                        <Input
-                            id="hora_extra"
-                            value={form.hora_extra || ""}
-                            onChange={(e) => handleChange("hora_extra", e.target.value)}
-                            placeholder="Ex: 02:00"
+                            value={form.hora_total_str || ""}
+                            onChange={(e) => handleChange("hora_total_str", e.target.value)}
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground border-b border-border pb-1">
-                    Valores Financeiros
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="despesas">Despesas</Label>
-                        <Input
-                            id="despesas"
-                            value={form.despesas || ""}
-                            onChange={(e) => handleChange("despesas", e.target.value)}
-                            placeholder="R$ 0,00"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="valor_chamado">Valor do Chamado</Label>
-                        <Input
-                            id="valor_chamado"
-                            type="number"
-                            step="0.01"
-                            value={form.valor_chamado || ""}
-                            onChange={(e) => handleChange("valor_chamado", e.target.value)}
-                            placeholder="0.00"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="valor_total">Valor Total</Label>
-                        <Input
-                            id="valor_total"
-                            type="number"
-                            step="0.01"
-                            value={form.valor_total || ""}
-                            onChange={(e) => handleChange("valor_total", e.target.value)}
-                            placeholder="0.00"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="valor_faturado">Valor Faturado</Label>
-                        <Input
-                            id="valor_faturado"
-                            type="number"
-                            step="0.01"
-                            value={form.valor_faturado || ""}
-                            onChange={(e) => handleChange("valor_faturado", e.target.value)}
-                            placeholder="0.00"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="valor_pago">Valor Pago</Label>
-                        <Input
-                            id="valor_pago"
-                            type="number"
-                            step="0.01"
-                            value={form.valor_pago || ""}
-                            onChange={(e) => handleChange("valor_pago", e.target.value)}
-                            placeholder="0.00"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="valor_ganho">Valor Ganho</Label>
-                        <Input
-                            id="valor_ganho"
-                            type="number"
-                            step="0.01"
-                            value={form.valor_ganho || ""}
-                            onChange={(e) => handleChange("valor_ganho", e.target.value)}
-                            placeholder="0.00"
-                            disabled
-                        />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Lado Esquerdo: CLIENTE */}
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5 shadow-sm">
+                    <h3 className="text-sm font-bold text-blue-500 border-b border-blue-500/20 pb-2 mb-5">
+                        Valores Cobrados (Cliente)
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="valor_chamado_cliente">Valor do Chamado</Label>
+                            <Input
+                                id="valor_chamado_cliente"
+                                type="number" step="0.01"
+                                value={form.valor_chamado_cliente || ""}
+                                onChange={(e) => handleChange("valor_chamado_cliente", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="hora_extra_cliente">Hora Extra</Label>
+                            <Input
+                                id="hora_extra_cliente"
+                                type="number" step="0.01"
+                                value={form.hora_extra_cliente || ""}
+                                onChange={(e) => handleChange("hora_extra_cliente", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="deslocamento_cliente">Deslocamento</Label>
+                            <Input
+                                id="deslocamento_cliente"
+                                type="number" step="0.01"
+                                value={form.deslocamento_cliente || ""}
+                                onChange={(e) => handleChange("deslocamento_cliente", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="reembolso_cliente">Reembolso</Label>
+                            <Input
+                                id="reembolso_cliente"
+                                type="number" step="0.01"
+                                value={form.reembolso_cliente || ""}
+                                onChange={(e) => handleChange("reembolso_cliente", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2 mt-2">
+                            <Label htmlFor="valor_total_cliente" className="font-bold">Valor Total (Cliente)</Label>
+                            <Input
+                                id="valor_total_cliente"
+                                type="number" step="0.01"
+                                value={form.valor_total_cliente || ""}
+                                disabled
+                                className="bg-blue-500/10 font-bold text-blue-500"
+                            />
+                        </div>
                     </div>
                 </div>
+
+                <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-5 shadow-sm">
+                    <h3 className="text-sm font-bold text-orange-500 border-b border-orange-500/20 pb-2 mb-5">
+                        Valores Repassados (Técnico)
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="valor_chamado_tecnico">Valor do Chamado</Label>
+                            <Input
+                                id="valor_chamado_tecnico"
+                                type="number" step="0.01"
+                                value={form.valor_chamado_tecnico || ""}
+                                onChange={(e) => handleChange("valor_chamado_tecnico", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="hora_extra_tecnico">Hora Extra</Label>
+                            <Input
+                                id="hora_extra_tecnico"
+                                type="number" step="0.01"
+                                value={form.hora_extra_tecnico || ""}
+                                onChange={(e) => handleChange("hora_extra_tecnico", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="deslocamento_tecnico">Deslocamento</Label>
+                            <Input
+                                id="deslocamento_tecnico"
+                                type="number" step="0.01"
+                                value={form.deslocamento_tecnico || ""}
+                                onChange={(e) => handleChange("deslocamento_tecnico", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="reembolso_tecnico">Reembolso</Label>
+                            <Input
+                                id="reembolso_tecnico"
+                                type="number" step="0.01"
+                                value={form.reembolso_tecnico || ""}
+                                onChange={(e) => handleChange("reembolso_tecnico", e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2 mt-2">
+                            <Label htmlFor="valor_total_tecnico" className="font-bold">Valor Total (Técnico)</Label>
+                            <Input
+                                id="valor_total_tecnico"
+                                type="number" step="0.01"
+                                value={form.valor_total_tecnico || ""}
+                                disabled
+                                className="bg-orange-500/10 font-bold text-orange-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div className="mt-6 flex gap-3 border-t border-border pt-5">
-                <Button type="submit" className="shadow-sm" disabled={isUploading}>
-                    {initialData ? "Atualizar Chamado" : "Salvar Chamado"}
-                </Button>
+            <div className="mt-6 flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={onCancel} disabled={isUploading}>
                     Cancelar
+                </Button>
+                <Button type="submit" className="shadow-sm min-w-[150px]" disabled={isUploading}>
+                    {initialData ? "Atualizar Chamado" : "Salvar Chamado"}
                 </Button>
             </div>
         </form>

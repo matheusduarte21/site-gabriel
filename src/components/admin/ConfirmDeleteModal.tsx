@@ -12,19 +12,19 @@ interface ConfirmDeleteModalProps {
 export const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, loading = false }: ConfirmDeleteModalProps) => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && !loading && onClose()}>
-        <DialogContent className="max-w-md rounded-none">
+        <DialogContent className="max-w-md rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-2xl">
             <DialogHeader className="flex flex-col items-center text-center sm:text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center">
                 <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
             <DialogTitle className="text-xl">Excluir registro?</DialogTitle>
-            <DialogDescription className="text-center pt-2">
+            <DialogDescription className="text-center pt-2 text-muted-foreground dark:text-slate-300">
                 Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita e os dados serão removidos permanentemente.
             </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 mt-6">
-            <Button variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto dark:bg-transparent dark:hover:bg-slate-700">
                 Cancelar
             </Button>
             <Button 

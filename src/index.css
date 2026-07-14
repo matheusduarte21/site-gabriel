@@ -4,42 +4,65 @@
 
 @layer base {
   :root {
-    /* Fundo principal (Azul Marinho Escuro da imagem) */
-    --background: 213 48% 8%; 
+    --background: 215 28% 94%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 211 88% 43%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 26% 88%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 214 24% 88%;
+    --muted-foreground: 215 20% 35%;
+
+    --accent: 211 75% 88%;
+    --accent-foreground: 211 88% 28%;
+
+    --destructive: 0 84.2% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 24% 82%;
+    --input: 214 24% 82%;
+    --ring: 211 88% 43%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 213 48% 8%;
     --foreground: 210 40% 98%;
-    
-    /* Fundo dos cartões e modais */
-    --card: 212 41% 13%; 
+
+    --card: 212 41% 13%;
     --card-foreground: 210 40% 98%;
+
     --popover: 212 41% 13%;
     --popover-foreground: 210 40% 98%;
-    
-    /* Cor primária (Azul vivo) */
-    --primary: 207 90% 54%; 
+
+    --primary: 207 90% 54%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Elementos secundários, abas inativas e fundos de input */
-    --secondary: 215 35% 18%; 
+
+    --secondary: 215 35% 18%;
     --secondary-foreground: 210 40% 98%;
-    
-    /* Textos secundários e bordas inativas */
+
     --muted: 215 35% 18%;
-    --muted-foreground: 215 20% 65%; 
-    
-    /* Efeitos de hover (Accent) */
+    --muted-foreground: 215 20% 65%;
+
     --accent: 215 35% 18%;
     --accent-foreground: 210 40% 98%;
-    
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    
-    /* Bordas e linhas divisórias */
-    --border: 214 30% 16%; 
-    --input: 214 30% 16%; 
-    
-    /* Anel de foco (outline) da mesma cor primária */
-    --ring: 207 90% 54%; 
-    --radius: 0.5rem;
+
+    --border: 214 30% 16%;
+    --input: 214 30% 16%;
+    --ring: 207 90% 54%;
   }
 }
 
@@ -47,7 +70,30 @@
   * {
     @apply border-border;
   }
+
+  html {
+    @apply bg-background;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply bg-card text-foreground;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(2);
+    opacity: 0.9;
+    cursor: pointer;
   }
 }
