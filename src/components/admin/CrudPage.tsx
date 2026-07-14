@@ -1,25 +1,50 @@
-
-import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Eye, FileText, Inbox } from "lucide-react";
+import {
+    type ReactNode,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import {
+    ChevronLeft,
+    ChevronRight,
+    ClipboardList,
+    Eye,
+    FileText,
+    Inbox,
+    Info,
+    Loader2,
+    Pencil,
+    Plus,
+    Save,
+    Search,
+    Trash2,
+    X,
+} from "lucide-react";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "../ui/dialog";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 
 export interface ColumnOption {
-  value: string | number;
-  label: string;
+    value: string | number;
+    label: string;
 }
 
 export interface Column {
-  key: string;
-  label: string;
-  type?: "text" | "select"; 
-  options?: ColumnOption[]; 
+    key: string;
+    label: string;
+    type?: "text" | "select";
+    options?: ColumnOption[];
 }
 
 export interface CrudItem {
-  id: string | number;
-  [key: string]: any;
+    id: string | number;
+    [key: string]: any;
 }
 
 export type CrudPageProps = {
@@ -29,370 +54,1147 @@ export type CrudPageProps = {
     initialData: any[];
     isLoading?: boolean;
     modalMaxWidth?: string;
-    onDelete?: (id: string | number) => Promise<void> | void;
-    onSave?: (data: any) => Promise<void> | void;
+    onDelete?: (
+        id: string | number
+    ) => Promise<void> | void;
+    onSave?: (
+        data: any
+    ) => Promise<void> | void;
     CustomForm?: (props: any) => JSX.Element;
-}
+};
 
 const ITEMS_PER_PAGE = 5;
 
-const CrudPage = ({ title, subtitle, columns, initialData, isLoading = false, CustomForm, modalMaxWidth = "max-w-lg", onDelete, onSave }: CrudPageProps) => {
-  const [items, setItems] = useState<CrudItem[]>(initialData);
-  const [search, setSearch] = useState("");
-  const [editingId, setEditingId] = useState<string | number | null>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const [showForm, setShowForm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<string | number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<CrudItem | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [internalLoading, setInternalLoading] = useState(true);
-
-  useEffect(() => {
-    setItems(initialData);
-  }, [initialData]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
-  useEffect(() => {
-    if (isLoading) {
-      setInternalLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setInternalLoading(false);
-      }, 1500);
-      return () => clearTimeout(timer);
+const obterValorSelect = (
+    column: Column,
+    value: unknown
+): ReactNode => {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "---";
     }
-  }, [isLoading]);
 
-  const filtered = items.filter((item) =>
-    columns.some((col) =>
-      String(item[col.key] || "")?.toLowerCase().includes(search.toLowerCase())
-    )
-  );
+    if (column.type === "select") {
+        const option = column.options?.find(
+            (item) =>
+                String(item.value) === String(value)
+        );
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedItems = filtered.slice(startIndex, endIndex);
+        return option?.label ?? String(value);
+    }
 
-  const handleEdit = (item: CrudItem) => {
-    setEditingId(item.id);
-    setFormData(item);
-    setShowForm(true);
-  };
+    return value as ReactNode;
+};
 
-  const handleNew = () => {
-    setEditingId(null);
-    setFormData({});
-    setShowForm(true);
-  };
+const obterValorPesquisa = (
+    item: CrudItem,
+    column: Column
+): string => {
+    const value = item[column.key];
 
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setFormData({});
-  };
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "";
+    }
 
-  const handleSaveDefault = async () => {
-    setIsSaving(true);
-    try {
-      const dataToSave = editingId ? { id: editingId, ...formData } : formData;
-      if (onSave) {
-        await onSave(dataToSave);
-      } else {
-        if (editingId) {
-          setItems((prev) => prev.map((item) => (item.id === editingId ? { ...item, ...formData } : item)));
-        } else {
-          setItems((prev) => [...prev, { id: crypto.randomUUID(), ...formData }]);
+    if (column.type === "select") {
+        const option = column.options?.find(
+            (itemOption) =>
+                String(itemOption.value) ===
+                String(value)
+        );
+
+        return option?.label ?? String(value);
+    }
+
+    if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+    ) {
+        return String(value);
+    }
+
+    return "";
+};
+
+const obterEstiloDetalhe = (
+    key: string
+): string => {
+    const campo = key.toLowerCase();
+
+    if (campo.includes("lucro")) {
+        return "border-emerald-200 bg-emerald-50/70";
+    }
+
+    if (
+        campo.includes("valor_tecnico") ||
+        campo.includes("tecnico_formatado") ||
+        campo.includes("pago")
+    ) {
+        return "border-amber-200 bg-amber-50/70";
+    }
+
+    if (
+        campo.includes("valor_cliente") ||
+        campo.includes("cliente_formatado") ||
+        campo.includes("faturado")
+    ) {
+        return "border-indigo-200 bg-indigo-50/70";
+    }
+
+    if (campo.includes("status")) {
+        return "border-blue-200 bg-blue-50/60";
+    }
+
+    return "border-border bg-background";
+};
+
+const obterEstiloValor = (
+    key: string
+): string => {
+    const campo = key.toLowerCase();
+
+    if (campo.includes("lucro")) {
+        return "text-emerald-700";
+    }
+
+    if (
+        campo.includes("valor_tecnico") ||
+        campo.includes("tecnico_formatado") ||
+        campo.includes("pago")
+    ) {
+        return "text-amber-700";
+    }
+
+    if (
+        campo.includes("valor_cliente") ||
+        campo.includes("cliente_formatado") ||
+        campo.includes("faturado")
+    ) {
+        return "text-indigo-700";
+    }
+
+    if (campo.includes("status")) {
+        return "text-blue-700";
+    }
+
+    return "text-foreground";
+};
+
+const CrudPage = ({
+    title,
+    subtitle,
+    columns,
+    initialData,
+    isLoading = false,
+    CustomForm,
+    modalMaxWidth = "max-w-lg",
+    onDelete,
+    onSave,
+}: CrudPageProps) => {
+    const [items, setItems] =
+        useState<CrudItem[]>(initialData);
+
+    const [search, setSearch] =
+        useState("");
+
+    const [editingId, setEditingId] = useState<
+        string | number | null
+    >(null);
+
+    const [formData, setFormData] = useState<
+        Record<string, string>
+    >({});
+
+    const [showForm, setShowForm] =
+        useState(false);
+
+    const [currentPage, setCurrentPage] =
+        useState(1);
+
+    const [
+        isDeleteModalOpen,
+        setIsDeleteModalOpen,
+    ] = useState(false);
+
+    const [itemToDelete, setItemToDelete] =
+        useState<string | number | null>(null);
+
+    const [isDeleting, setIsDeleting] =
+        useState(false);
+
+    const [
+        showDetailsModal,
+        setShowDetailsModal,
+    ] = useState(false);
+
+    const [selectedItem, setSelectedItem] =
+        useState<CrudItem | null>(null);
+
+    const [isSaving, setIsSaving] =
+        useState(false);
+
+    const [internalLoading, setInternalLoading] =
+        useState(true);
+
+    useEffect(() => {
+        setItems(initialData);
+    }, [initialData]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
+
+    useEffect(() => {
+        if (isLoading) {
+            setInternalLoading(true);
+            return;
         }
-      }
-      closeForm();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
-  const handleDeleteClick = (id: string | number) => {
-    setItemToDelete(id);
-    setIsDeleteModalOpen(true);
-  };
+        const timer = window.setTimeout(() => {
+            setInternalLoading(false);
+        }, 500);
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    try {
-      if (onDelete) await onDelete(itemToDelete);
-      setItems((prev) => prev.filter((item) => item.id !== itemToDelete));
-      if (paginatedItems.length === 1 && currentPage > 1) setCurrentPage((prev) => prev - 1);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteModalOpen(false);
-      setItemToDelete(null);
-    }
-  };
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [isLoading]);
 
-  const handleViewDetails = (item: CrudItem) => {
-      setSelectedItem(item);
-      setShowDetailsModal(true);
-  };
+    const filtered = useMemo(() => {
+        const pesquisaNormalizada = search
+            .trim()
+            .toLowerCase();
 
-  const closeDetails = () => {
-      setShowDetailsModal(false);
-      setSelectedItem(null);
-  };
+        if (!pesquisaNormalizada) {
+            return items;
+        }
 
-  const handleOpenDocument = (url: string) => {
-      window.open(url, '_blank', 'noopener,noreferrer');
-  };
+        return items.filter((item) =>
+            columns.some((column) =>
+                obterValorPesquisa(
+                    item,
+                    column
+                )
+                    .toLowerCase()
+                    .includes(pesquisaNormalizada)
+            )
+        );
+    }, [items, columns, search]);
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-      </div>
+    const totalPages = Math.ceil(
+        filtered.length / ITEMS_PER_PAGE
+    );
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Pesquisar por código ou descrição"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-input bg-card shadow-sm py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-        <Button onClick={handleNew} className="gap-2 shadow-sm rounded-lg">
-          <Plus className="h-4 w-4" />
-          Novo registro
-        </Button>
-      </div>
+    const startIndex =
+        (currentPage - 1) * ITEMS_PER_PAGE;
 
-      <Dialog open={showForm} onOpenChange={(isOpen) => !isOpen && closeForm()}>
-        <DialogContent className={`${modalMaxWidth} max-h-[85vh] overflow-y-auto rounded-xl shadow-lg border-border`}>
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Editar" : "Novo"} registro</DialogTitle>
-            <DialogDescription>
-              {editingId ? "Atualize os campos abaixo" : "Preencha os campos para criar um novo registro"}
-            </DialogDescription>
-          </DialogHeader>
+    const endIndex =
+        startIndex + ITEMS_PER_PAGE;
 
-          {CustomForm ? (
-            <CustomForm
-              initialData={editingId ? items.find((i) => i.id === editingId) : null}
-              onCancel={closeForm}
-              onSubmit={async (data: any) => {
-                  if (onSave) await onSave(data);
-                  closeForm();
-              }}
-            />
-          ) : (
-            <div className="space-y-6 pt-2">
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                {columns.map((col) => (
-                  <div key={col.key} className="space-y-1.5">
-                    <label className="block text-sm font-medium text-foreground">
-                      {col.label}
-                    </label>
-                    {col.type === "select" ? (
-                      <select
-                        value={formData[col.key] || ""}
-                        onChange={(e) => setFormData((p) => ({ ...p, [col.key]: e.target.value }))}
-                        className="w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary appearance-none shadow-sm"
-                      >
-                        <option value="" disabled>Selecione {col.label.toLowerCase()}...</option>
-                        {col.options?.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
+    const paginatedItems = filtered.slice(
+        startIndex,
+        endIndex
+    );
+
+    const handleEdit = (
+        item: CrudItem
+    ) => {
+        setEditingId(item.id);
+        setFormData(item);
+        setShowForm(true);
+    };
+
+    const handleNew = () => {
+        setEditingId(null);
+        setFormData({});
+        setShowForm(true);
+    };
+
+    const closeForm = () => {
+        if (isSaving) {
+            return;
+        }
+
+        setShowForm(false);
+        setEditingId(null);
+        setFormData({});
+    };
+
+    const handleSaveDefault = async () => {
+        try {
+            setIsSaving(true);
+
+            const dataToSave = editingId
+                ? {
+                      id: editingId,
+                      ...formData,
+                  }
+                : formData;
+
+            if (onSave) {
+                await onSave(dataToSave);
+            } else if (editingId !== null) {
+                setItems((currentItems) =>
+                    currentItems.map((item) =>
+                        item.id === editingId
+                            ? {
+                                  ...item,
+                                  ...formData,
+                              }
+                            : item
+                    )
+                );
+            } else {
+                setItems((currentItems) => [
+                    ...currentItems,
+                    {
+                        id: crypto.randomUUID(),
+                        ...formData,
+                    },
+                ]);
+            }
+
+            setShowForm(false);
+            setEditingId(null);
+            setFormData({});
+        } catch (error) {
+            console.error(
+                "Erro ao salvar registro:",
+                error
+            );
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteClick = (
+        id: string | number
+    ) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (itemToDelete === null) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+
+            if (onDelete) {
+                await onDelete(itemToDelete);
+            }
+
+            setItems((currentItems) =>
+                currentItems.filter(
+                    (item) =>
+                        item.id !== itemToDelete
+                )
+            );
+
+            if (
+                paginatedItems.length === 1 &&
+                currentPage > 1
+            ) {
+                setCurrentPage(
+                    (currentPageValue) =>
+                        currentPageValue - 1
+                );
+            }
+        } catch (error) {
+            console.error(
+                "Erro ao excluir registro:",
+                error
+            );
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+        }
+    };
+
+    const handleViewDetails = (
+        item: CrudItem
+    ) => {
+        setSelectedItem(item);
+        setShowDetailsModal(true);
+    };
+
+    const closeDetails = () => {
+        setShowDetailsModal(false);
+        setSelectedItem(null);
+    };
+
+    const handleOpenDocument = (
+        url: string
+    ) => {
+        window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    };
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                    {title}
+                </h1>
+
+                {subtitle && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {subtitle}
+                    </p>
+                )}
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative max-w-sm flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                    <input
                         type="text"
-                        value={formData[col.key] || ""}
-                        onChange={(e) => setFormData((p) => ({ ...p, [col.key]: e.target.value }))}
-                        placeholder={`Digite ${col.label.toLowerCase()}...`}
-                        className="w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary shadow-sm"
-                      />
+                        placeholder="Pesquisar registros"
+                        value={search}
+                        onChange={(event) =>
+                            setSearch(
+                                event.target.value
+                            )
+                        }
+                        className="w-full rounded-xl border border-input bg-card py-2.5 pl-10 pr-10 text-sm text-foreground shadow-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+
+                    {search && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setSearch("")
+                            }
+                            aria-label="Limpar pesquisa"
+                            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
                     )}
-                  </div>
-                ))}
-              </div>
+                </div>
 
-              <div className="mt-6 flex gap-3 border-t border-border pt-5">
-                <Button onClick={handleSaveDefault} disabled={isSaving} className="rounded-lg">
-                  {editingId ? "Atualizar" : "Salvar"}
+                <Button
+                    onClick={handleNew}
+                    className="gap-2 rounded-lg shadow-sm"
+                >
+                    <Plus className="h-4 w-4" />
+                    Novo registro
                 </Button>
-                <Button variant="outline" onClick={closeForm} disabled={isSaving} className="rounded-lg">
-                  Cancelar
-                </Button>
-              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={showDetailsModal} onOpenChange={(isOpen) => !isOpen && closeDetails()}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl shadow-lg border-border">
-              <DialogHeader>
-                  <DialogTitle>Detalhes do Registro</DialogTitle>
-              </DialogHeader>
-              {selectedItem && (
-                  <div className="space-y-4 pt-4">
-                      <div className="grid grid-cols-2 gap-4">
-                          {columns.map((col) => (
-                              <div key={col.key} className="space-y-1">
-                                  <p className="text-sm font-semibold text-muted-foreground">{col.label}</p>
-                                  <p className="text-sm font-medium text-foreground break-words">
-                                    {selectedItem[col.key] === null || selectedItem[col.key] === undefined || selectedItem[col.key] === ""
-                                        ? "---"
-                                        : col.type === "select"
-                                        ? col.options?.find(opt => String(opt.value) === String(selectedItem[col.key]))?.label || selectedItem[col.key]
-                                        : selectedItem[col.key]}
-                                  </p>
-                              </div>
-                          ))}
-                      </div>
-                      
-                      {selectedItem.url_arquivo && (
-                          <div className="mt-6 pt-4 border-t border-border">
-                              <p className="text-sm font-semibold text-muted-foreground mb-3">Documento Anexado</p>
-                              <Button 
-                                variant="outline" 
-                                className="w-full sm:w-auto gap-2 rounded-lg"
-                                onClick={() => handleOpenDocument(selectedItem.url_arquivo)}
-                              >
-                                  <FileText className="h-4 w-4" />
-                                  Visualizar Documento
-                              </Button>
-                          </div>
-                      )}
-                  </div>
-              )}
-          </DialogContent>
-      </Dialog>
+            <Dialog
+                open={showForm}
+                onOpenChange={(open) => {
+                    if (!open && !isSaving) {
+                        closeForm();
+                    }
+                }}
+            >
+                <DialogContent
+                    className={`${modalMaxWidth} max-h-[92vh] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-2xl`}
+                >
+                    <div className="flex max-h-[92vh] flex-col">
+                        <DialogHeader className="border-b border-border bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 pr-12">
+                            <div className="flex items-start gap-3">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700">
+                                    {editingId !== null ? (
+                                        <Pencil className="h-5 w-5" />
+                                    ) : (
+                                        <Plus className="h-5 w-5" />
+                                    )}
+                                </span>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {col.label}
-                  </th>
-                ))}
-                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {internalLoading ? (
-                Array.from({ length: ITEMS_PER_PAGE }).map((_, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {columns.map((col) => (
-                      <td key={col.key} className="px-5 py-4">
-                        <div className="h-4 w-3/4 animate-pulse rounded bg-muted"></div>
-                      </td>
-                    ))}
-                    <td className="px-5 py-4">
-                      <div className="ml-auto h-4 w-12 animate-pulse rounded bg-muted"></div>
-                    </td>
-                  </tr>
-                ))
-              ) : paginatedItems.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length + 1} className="px-5 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <Inbox className="h-8 w-8 opacity-20" />
-                      <p className="text-sm font-medium">Nenhum registro encontrado</p>
-                      <p className="text-xs">Tente ajustar sua busca ou adicione um novo item.</p>
+                                <div>
+                                    <DialogTitle className="text-lg font-bold text-foreground">
+                                        {editingId !== null
+                                            ? "Editar registro"
+                                            : "Novo registro"}
+                                    </DialogTitle>
+
+                                    <DialogDescription className="mt-1 text-sm leading-5 text-muted-foreground">
+                                        {editingId !== null
+                                            ? "Atualize as informações necessárias e confirme as alterações."
+                                            : "Preencha os campos abaixo para cadastrar um novo registro."}
+                                    </DialogDescription>
+                                </div>
+                            </div>
+                        </DialogHeader>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
+                            {CustomForm ? (
+                                <CustomForm
+                                    initialData={
+                                        editingId !== null
+                                            ? items.find(
+                                                  (
+                                                      item
+                                                  ) =>
+                                                      item.id ===
+                                                      editingId
+                                              ) ??
+                                              null
+                                            : null
+                                    }
+                                    onCancel={closeForm}
+                                    onSubmit={async (
+                                        data: any
+                                    ) => {
+                                        if (onSave) {
+                                            await onSave(
+                                                data
+                                            );
+                                        }
+
+                                        closeForm();
+                                    }}
+                                />
+                            ) : (
+                                <div className="space-y-6">
+                                    <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                                        <div className="mb-5 flex items-start gap-3 border-b border-border pb-4">
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                                <ClipboardList className="h-4 w-4" />
+                                            </span>
+
+                                            <div>
+                                                <h3 className="text-sm font-bold text-foreground">
+                                                    Informações
+                                                    do
+                                                    registro
+                                                </h3>
+
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                                    Preencha
+                                                    os campos
+                                                    necessários.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            {columns.map(
+                                                (
+                                                    column
+                                                ) => (
+                                                    <div
+                                                        key={
+                                                            column.key
+                                                        }
+                                                        className="space-y-1.5"
+                                                    >
+                                                        <label
+                                                            htmlFor={`crud-${column.key}`}
+                                                            className="block text-sm font-medium text-foreground"
+                                                        >
+                                                            {
+                                                                column.label
+                                                            }
+                                                        </label>
+
+                                                        {column.type ===
+                                                        "select" ? (
+                                                            <select
+                                                                id={`crud-${column.key}`}
+                                                                value={
+                                                                    formData[
+                                                                        column
+                                                                            .key
+                                                                    ] ??
+                                                                    ""
+                                                                }
+                                                                onChange={(
+                                                                    event
+                                                                ) =>
+                                                                    setFormData(
+                                                                        (
+                                                                            currentForm
+                                                                        ) => ({
+                                                                            ...currentForm,
+                                                                            [column.key]:
+                                                                                event
+                                                                                    .target
+                                                                                    .value,
+                                                                        })
+                                                                    )
+                                                                }
+                                                                className="h-10 w-full appearance-none rounded-lg border border-input bg-background px-3.5 text-sm text-foreground shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                                            >
+                                                                <option
+                                                                    value=""
+                                                                    disabled
+                                                                >
+                                                                    Selecione{" "}
+                                                                    {column.label.toLowerCase()}
+                                                                </option>
+
+                                                                {column.options?.map(
+                                                                    (
+                                                                        option
+                                                                    ) => (
+                                                                        <option
+                                                                            key={
+                                                                                option.value
+                                                                            }
+                                                                            value={
+                                                                                option.value
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                option.label
+                                                                            }
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        ) : (
+                                                            <input
+                                                                id={`crud-${column.key}`}
+                                                                type="text"
+                                                                value={
+                                                                    formData[
+                                                                        column
+                                                                            .key
+                                                                    ] ??
+                                                                    ""
+                                                                }
+                                                                onChange={(
+                                                                    event
+                                                                ) =>
+                                                                    setFormData(
+                                                                        (
+                                                                            currentForm
+                                                                        ) => ({
+                                                                            ...currentForm,
+                                                                            [column.key]:
+                                                                                event
+                                                                                    .target
+                                                                                    .value,
+                                                                        })
+                                                                    )
+                                                                }
+                                                                placeholder={`Digite ${column.label.toLowerCase()}`}
+                                                                className="h-10 w-full rounded-lg border border-input bg-background px-3.5 text-sm text-foreground shadow-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    </section>
+
+                                    <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={
+                                                closeForm
+                                            }
+                                            disabled={
+                                                isSaving
+                                            }
+                                            className="sm:min-w-[110px]"
+                                        >
+                                            Cancelar
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            onClick={
+                                                handleSaveDefault
+                                            }
+                                            disabled={
+                                                isSaving
+                                            }
+                                            className="gap-2 shadow-sm sm:min-w-[140px]"
+                                        >
+                                            {isSaving ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Salvando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Save className="h-4 w-4" />
+                                                    {editingId !==
+                                                    null
+                                                        ? "Atualizar"
+                                                        : "Salvar"}
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedItems.map((item) => (
-                  <tr key={item.id} className="transition-colors hover:bg-muted/30">
-                    {columns.map((col) => (
-                      <td key={col.key} className="whitespace-nowrap px-5 py-4 text-sm text-foreground">
-                        {item[col.key] === null || item[col.key] === undefined || item[col.key] === ""
-                          ? "---"
-                          : col.type === "select"
-                          ? col.options?.find(opt => String(opt.value) === String(item[col.key]))?.label || item[col.key]
-                          : item[col.key]}
-                      </td>
-                    ))}
-                    <td className="whitespace-nowrap px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleViewDetails(item)} title="Ver Detalhes" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => handleEdit(item)} title="Editar" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => handleDeleteClick(item.id)} title="Excluir" className="rounded-md p-2 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </DialogContent>
+            </Dialog>
 
-        {!internalLoading && totalPages > 1 && (
-          <div className="flex flex-col gap-3 border-t border-border bg-card/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-sm text-muted-foreground">
-              Mostrando <span className="font-medium text-foreground">{startIndex + 1}</span> a <span className="font-medium text-foreground">{Math.min(endIndex, filtered.length)}</span> de <span className="font-medium text-foreground">{filtered.length}</span> resultados
-            </span>
-            <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 w-8 rounded-lg p-0">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="h-8 w-8 rounded-lg p-0 text-xs">
-                  {page}
-                </Button>
-              ))}
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-8 w-8 rounded-lg p-0">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <Dialog
+                open={showDetailsModal}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        closeDetails();
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden rounded-xl border border-border bg-card p-0 shadow-2xl">
+                    <div className="flex max-h-[90vh] flex-col">
+                        <DialogHeader className="border-b border-border bg-gradient-to-r from-slate-50 to-blue-50 px-6 py-5 pr-12">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-start gap-3">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700">
+                                        <Info className="h-5 w-5" />
+                                    </span>
+
+                                    <div>
+                                        <DialogTitle className="text-lg font-bold text-foreground">
+                                            Detalhes do
+                                            registro
+                                        </DialogTitle>
+
+                                        <DialogDescription className="mt-1 text-sm leading-5 text-muted-foreground">
+                                            Consulte as
+                                            informações
+                                            completas do
+                                            item
+                                            selecionado.
+                                        </DialogDescription>
+                                    </div>
+                                </div>
+
+                                {selectedItem && (
+                                    <span className="hidden max-w-[180px] truncate rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:block">
+                                        ID:{" "}
+                                        {String(
+                                            selectedItem.id
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                        </DialogHeader>
+
+                        {selectedItem && (
+                            <div className="min-h-0 flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
+                                <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                                    <div className="mb-5 flex items-center gap-2 border-b border-border pb-4">
+                                        <ClipboardList className="h-5 w-5 text-blue-600" />
+
+                                        <h3 className="text-sm font-bold text-foreground">
+                                            Informações
+                                            cadastradas
+                                        </h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        {columns.map(
+                                            (
+                                                column
+                                            ) => {
+                                                const value =
+                                                    obterValorSelect(
+                                                        column,
+                                                        selectedItem[
+                                                            column
+                                                                .key
+                                                        ]
+                                                    );
+
+                                                return (
+                                                    <div
+                                                        key={
+                                                            column.key
+                                                        }
+                                                        className={`rounded-lg border p-4 ${obterEstiloDetalhe(
+                                                            column.key
+                                                        )}`}
+                                                    >
+                                                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                            {
+                                                                column.label
+                                                            }
+                                                        </p>
+
+                                                        <div
+                                                            className={`mt-1.5 break-words text-sm font-semibold ${obterEstiloValor(
+                                                                column.key
+                                                            )}`}
+                                                        >
+                                                            {
+                                                                value
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+                                    </div>
+                                </section>
+
+                                {selectedItem.url_arquivo && (
+                                    <section className="mt-4 rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex items-start gap-3">
+                                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                                                    <FileText className="h-5 w-5" />
+                                                </span>
+
+                                                <div>
+                                                    <p className="text-sm font-bold text-blue-700">
+                                                        Documento
+                                                        anexado
+                                                    </p>
+
+                                                    <p className="mt-1 text-xs text-blue-700/80">
+                                                        Existe
+                                                        um
+                                                        arquivo
+                                                        associado
+                                                        a este
+                                                        registro.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="gap-2 border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                                                onClick={() =>
+                                                    handleOpenDocument(
+                                                        selectedItem.url_arquivo
+                                                    )
+                                                }
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                                Visualizar
+                                                documento
+                                            </Button>
+                                        </div>
+                                    </section>
+                                )}
+
+                                <div className="mt-5 flex justify-end border-t border-border pt-5">
+                                    <Button
+                                        type="button"
+                                        onClick={
+                                            closeDetails
+                                        }
+                                        className="min-w-[110px]"
+                                    >
+                                        Fechar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-muted/30">
+                            <tr className="border-b border-border">
+                                {columns.map(
+                                    (column) => (
+                                        <th
+                                            key={
+                                                column.key
+                                            }
+                                            className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                        >
+                                            {
+                                                column.label
+                                            }
+                                        </th>
+                                    )
+                                )}
+
+                                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Ações
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-border">
+                            {internalLoading ? (
+                                Array.from({
+                                    length: ITEMS_PER_PAGE,
+                                }).map(
+                                    (
+                                        _,
+                                        rowIndex
+                                    ) => (
+                                        <tr
+                                            key={
+                                                rowIndex
+                                            }
+                                        >
+                                            {columns.map(
+                                                (
+                                                    column
+                                                ) => (
+                                                    <td
+                                                        key={
+                                                            column.key
+                                                        }
+                                                        className="px-5 py-4"
+                                                    >
+                                                        <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+                                                    </td>
+                                                )
+                                            )}
+
+                                            <td className="px-5 py-4">
+                                                <div className="ml-auto h-8 w-24 animate-pulse rounded-lg bg-muted" />
+                                            </td>
+                                        </tr>
+                                    )
+                                )
+                            ) : paginatedItems.length ===
+                              0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={
+                                            columns.length +
+                                            1
+                                        }
+                                        className="px-5 py-14 text-center"
+                                    >
+                                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                                            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                                <Inbox className="h-6 w-6 opacity-40" />
+                                            </span>
+
+                                            <p className="mt-1 text-sm font-semibold text-foreground">
+                                                Nenhum
+                                                registro
+                                                encontrado
+                                            </p>
+
+                                            <p className="text-xs">
+                                                Ajuste
+                                                sua
+                                                pesquisa
+                                                ou
+                                                adicione
+                                                um novo
+                                                registro.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedItems.map(
+                                    (item) => (
+                                        <tr
+                                            key={
+                                                item.id
+                                            }
+                                            className="transition-colors hover:bg-muted/30"
+                                        >
+                                            {columns.map(
+                                                (
+                                                    column
+                                                ) => (
+                                                    <td
+                                                        key={
+                                                            column.key
+                                                        }
+                                                        className="whitespace-nowrap px-5 py-4 text-sm text-foreground"
+                                                    >
+                                                        {obterValorSelect(
+                                                            column,
+                                                            item[
+                                                                column
+                                                                    .key
+                                                            ]
+                                                        )}
+                                                    </td>
+                                                )
+                                            )}
+
+                                            <td className="whitespace-nowrap px-5 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleViewDetails(
+                                                                item
+                                                            )
+                                                        }
+                                                        title="Ver detalhes"
+                                                        aria-label="Ver detalhes"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 transition-all hover:bg-blue-600 hover:text-white"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleEdit(
+                                                                item
+                                                            )
+                                                        }
+                                                        title="Editar"
+                                                        aria-label="Editar"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 transition-all hover:bg-amber-500 hover:text-white"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDeleteClick(
+                                                                item.id
+                                                            )
+                                                        }
+                                                        title="Excluir"
+                                                        aria-label="Excluir"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-600 hover:text-white"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {!internalLoading &&
+                    totalPages > 1 && (
+                        <div className="flex flex-col gap-3 border-t border-border bg-card/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                Mostrando{" "}
+                                <span className="font-medium text-foreground">
+                                    {startIndex + 1}
+                                </span>{" "}
+                                a{" "}
+                                <span className="font-medium text-foreground">
+                                    {Math.min(
+                                        endIndex,
+                                        filtered.length
+                                    )}
+                                </span>{" "}
+                                de{" "}
+                                <span className="font-medium text-foreground">
+                                    {
+                                        filtered.length
+                                    }
+                                </span>{" "}
+                                resultados
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setCurrentPage(
+                                            (
+                                                current
+                                            ) =>
+                                                Math.max(
+                                                    1,
+                                                    current -
+                                                        1
+                                                )
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage === 1
+                                    }
+                                    className="h-8 w-8 rounded-lg p-0"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+
+                                {Array.from(
+                                    {
+                                        length: totalPages,
+                                    },
+                                    (_, index) =>
+                                        index + 1
+                                ).map((page) => (
+                                    <Button
+                                        key={page}
+                                        variant={
+                                            page ===
+                                            currentPage
+                                                ? "default"
+                                                : "outline"
+                                        }
+                                        size="sm"
+                                        onClick={() =>
+                                            setCurrentPage(
+                                                page
+                                            )
+                                        }
+                                        className="h-8 w-8 rounded-lg p-0 text-xs"
+                                    >
+                                        {page}
+                                    </Button>
+                                ))}
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setCurrentPage(
+                                            (
+                                                current
+                                            ) =>
+                                                Math.min(
+                                                    totalPages,
+                                                    current +
+                                                        1
+                                                )
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages
+                                    }
+                                    className="h-8 w-8 rounded-lg p-0"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
             </div>
-          </div>
-        )}
-      </div>
 
-      <ConfirmDeleteModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        loading={isDeleting}
-      />
-    </div>
-  );
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() =>
+                    setIsDeleteModalOpen(false)
+                }
+                onConfirm={confirmDelete}
+                loading={isDeleting}
+            />
+        </div>
+    );
 };
 
 export default CrudPage;
