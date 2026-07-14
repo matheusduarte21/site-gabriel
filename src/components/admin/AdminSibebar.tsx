@@ -7,10 +7,13 @@ import {
     useState,
 } from "react";
 import {
+    ChevronUp,
     ClipboardList,
     LayoutDashboard,
+    Loader2,
     LogOut,
     Moon,
+    Settings,
     Sun,
     User2,
     UserCircle,
@@ -66,19 +69,17 @@ const AdminSidebar = ({
 
     const [isDarkMode, setIsDarkMode] =
         useState(() => {
-            const temaSalvo =
+            return (
                 localStorage.getItem(
                     "tema-sistema"
-                );
-
-            if (temaSalvo) {
-                return temaSalvo === "dark";
-            }
-
-            return window.matchMedia(
-                "(prefers-color-scheme: dark)"
-            ).matches;
+                ) === "dark"
+            );
         });
+
+    const [
+        configuracoesAbertas,
+        setConfiguracoesAbertas,
+    ] = useState(false);
 
     const [isLoggingOut, setIsLoggingOut] =
         useState(false);
@@ -87,22 +88,21 @@ const AdminSidebar = ({
         const root =
             window.document.documentElement;
 
-        if (isDarkMode) {
-            root.classList.add("dark");
+        root.classList.toggle(
+            "dark",
+            isDarkMode
+        );
 
-            localStorage.setItem(
-                "tema-sistema",
-                "dark"
-            );
-        } else {
-            root.classList.remove("dark");
-
-            localStorage.setItem(
-                "tema-sistema",
-                "light"
-            );
-        }
+        localStorage.setItem(
+            "tema-sistema",
+            isDarkMode ? "dark" : "light"
+        );
     }, [isDarkMode]);
+
+    const handleNavClick = () => {
+        setConfiguracoesAbertas(false);
+        fecharMenu?.();
+    };
 
     const handleLogout = async () => {
         if (isLoggingOut) {
@@ -129,29 +129,21 @@ const AdminSidebar = ({
         }
     };
 
-    const alternarTema = () => {
-        setIsDarkMode(
-            (temaAtual) => !temaAtual
-        );
-    };
-
     return (
         <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl lg:shadow-none">
-            <div className="flex h-20 shrink-0 items-center justify-center border-b border-sidebar-border px-5">
-                <div className="min-w-0">
-                    <img
-                        src={teccorpLogo}
-                        alt="Teccorp"
-                        className="w-auto max-w-[175px] object-cover"
-                    />
-                </div>
+            <div className="relative flex h-20 shrink-0 items-center justify-center border-b border-sidebar-border px-5">
+                <img
+                    src={teccorpLogo}
+                    alt="Teccorp"
+                    className=" w-auto max-w-[175px] object-cover "
+                />
 
                 {fecharMenu && (
                     <button
                         type="button"
                         onClick={fecharMenu}
                         aria-label="Fechar menu"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
+                        className="absolute right-3 flex h-9 w-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -168,7 +160,7 @@ const AdminSidebar = ({
                         key={item.to}
                         to={item.to}
                         end={item.end}
-                        onClick={fecharMenu}
+                        onClick={handleNavClick}
                         className={({ isActive }) =>
                             `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                                 isActive
@@ -198,59 +190,108 @@ const AdminSidebar = ({
                 ))}
             </nav>
 
-            <div className="mt-auto border-t border-sidebar-border p-4">
-                <div className="mb-3 rounded-xl border border-sidebar-border bg-sidebar-accent/20 p-3">
-                    <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                            <UserCircle className="h-5 w-5" />
-                        </span>
-
-                        <div className="min-w-0">
-                            <p className="truncate text-xs font-semibold text-sidebar-foreground">
-                                Área administrativa
+            <div className="mt-auto border-t border-sidebar-border p-3">
+                {configuracoesAbertas && (
+                    <div className="mb-2 rounded-xl border border-sidebar-border bg-sidebar-accent/20 p-3 shadow-lg">
+                        <div className="mb-3">
+                            <p className="text-xs font-bold text-sidebar-foreground">
+                                Aparência
                             </p>
 
-                            <p className="truncate text-[11px] text-sidebar-foreground/60">
-                                Gestão Teccorp
+                            <p className="mt-0.5 text-[11px] text-sidebar-foreground/50">
+                                Escolha o tema do sistema
                             </p>
                         </div>
-                    </div>
-                </div>
 
-                <div className="flex flex-col gap-1">
-                    <button
-                        type="button"
-                        onClick={alternarTema}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-accent/40">
-                            {isDarkMode ? (
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsDarkMode(false)
+                                }
+                                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                    !isDarkMode
+                                        ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
+                                        : "border-sidebar-border bg-sidebar/50 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }`}
+                            >
                                 <Sun className="h-4 w-4" />
-                            ) : (
+                                Claro
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsDarkMode(true)
+                                }
+                                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                    isDarkMode
+                                        ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
+                                        : "border-sidebar-border bg-sidebar/50 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }`}
+                            >
                                 <Moon className="h-4 w-4" />
-                            )}
-                        </span>
+                                Escuro
+                            </button>
+                        </div>
+                    </div>
+                )}
 
-                        {isDarkMode
-                            ? "Modo claro"
-                            : "Modo escuro"}
-                    </button>
+                <button
+                    type="button"
+                    onClick={() =>
+                        setConfiguracoesAbertas(
+                            (aberta) => !aberta
+                        )
+                    }
+                    aria-expanded={
+                        configuracoesAbertas
+                    }
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                        configuracoesAbertas
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    }`}
+                >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/50">
+                        <Settings className="h-4 w-4" />
+                    </span>
 
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
+                    <span className="flex-1 text-left">
+                        Aparência
+                    </span>
+
+                    <ChevronUp
+                        className={`h-4 w-4 transition-transform ${
+                            configuracoesAbertas
+                                ? "rotate-0"
+                                : "rotate-180"
+                        }`}
+                    />
+                </button>
+
+                <div className="my-2 border-t border-sidebar-border" />
+
+                <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
+                        {isLoggingOut ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
                             <LogOut className="h-4 w-4" />
-                        </span>
+                        )}
+                    </span>
 
+                    <span>
                         {isLoggingOut
-                            ? "Saindo..."
-                            : "Sair"}
-                    </button>
-                </div>
+                            ? "Encerrando sessão..."
+                            : "Encerrar sessão"}
+                    </span>
+                </button>
             </div>
         </aside>
     );
