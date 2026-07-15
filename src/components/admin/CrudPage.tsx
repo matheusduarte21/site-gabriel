@@ -55,6 +55,9 @@ export type CrudPageProps = {
     isLoading?: boolean;
     modalMaxWidth?: string;
     topContent?: ReactNode;
+    onView?: (
+        item: CrudItem
+    ) => void;
     onDelete?: (
         id: string | number
     ) => Promise<void> | void;
@@ -224,6 +227,7 @@ const CrudPage = ({
     initialData,
     isLoading = false,
     CustomForm,
+    onView,
     modalMaxWidth = "max-w-lg",
     topContent,
     onDelete,
@@ -536,10 +540,15 @@ const CrudPage = ({
         };
 
     const handleViewDetails = (
-        item: CrudItem
-    ) => {
-        setSelectedItem(item);
-        setShowDetailsModal(true);
+            item: CrudItem
+        ) => {
+            if (onView) {
+                onView(item);
+                return;
+            }
+
+            setSelectedItem(item);
+            setShowDetailsModal(true);
     };
 
     const closeDetails = () => {
