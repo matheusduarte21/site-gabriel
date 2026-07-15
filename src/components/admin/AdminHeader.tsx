@@ -1,5 +1,3 @@
-import { Bell, User } from "lucide-react";
-
 type AdminHeaderProps = {
     title: string;
     subtitle?: string;

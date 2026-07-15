@@ -54,13 +54,16 @@ export type CrudPageProps = {
     initialData: any[];
     isLoading?: boolean;
     modalMaxWidth?: string;
+    topContent?: ReactNode;
     onDelete?: (
         id: string | number
     ) => Promise<void> | void;
     onSave?: (
         data: any
     ) => Promise<void> | void;
-    CustomForm?: (props: any) => JSX.Element;
+    CustomForm?: (
+        props: any
+    ) => ReactNode;
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -78,12 +81,17 @@ const obterValorSelect = (
     }
 
     if (column.type === "select") {
-        const option = column.options?.find(
-            (item) =>
-                String(item.value) === String(value)
-        );
+        const option =
+            column.options?.find(
+                (item) =>
+                    String(item.value) ===
+                    String(value)
+            );
 
-        return option?.label ?? String(value);
+        return (
+            option?.label ??
+            String(value)
+        );
     }
 
     return value as ReactNode;
@@ -104,13 +112,18 @@ const obterValorPesquisa = (
     }
 
     if (column.type === "select") {
-        const option = column.options?.find(
-            (itemOption) =>
-                String(itemOption.value) ===
-                String(value)
-        );
+        const option =
+            column.options?.find(
+                (itemOption) =>
+                    String(
+                        itemOption.value
+                    ) === String(value)
+            );
 
-        return option?.label ?? String(value);
+        return (
+            option?.label ??
+            String(value)
+        );
     }
 
     if (
@@ -134,16 +147,24 @@ const obterEstiloDetalhe = (
     }
 
     if (
-        campo.includes("valor_tecnico") ||
-        campo.includes("tecnico_formatado") ||
+        campo.includes(
+            "valor_tecnico"
+        ) ||
+        campo.includes(
+            "tecnico_formatado"
+        ) ||
         campo.includes("pago")
     ) {
         return "border-amber-200 bg-amber-50/70";
     }
 
     if (
-        campo.includes("valor_cliente") ||
-        campo.includes("cliente_formatado") ||
+        campo.includes(
+            "valor_cliente"
+        ) ||
+        campo.includes(
+            "cliente_formatado"
+        ) ||
         campo.includes("faturado")
     ) {
         return "border-indigo-200 bg-indigo-50/70";
@@ -166,16 +187,24 @@ const obterEstiloValor = (
     }
 
     if (
-        campo.includes("valor_tecnico") ||
-        campo.includes("tecnico_formatado") ||
+        campo.includes(
+            "valor_tecnico"
+        ) ||
+        campo.includes(
+            "tecnico_formatado"
+        ) ||
         campo.includes("pago")
     ) {
         return "text-amber-700";
     }
 
     if (
-        campo.includes("valor_cliente") ||
-        campo.includes("cliente_formatado") ||
+        campo.includes(
+            "valor_cliente"
+        ) ||
+        campo.includes(
+            "cliente_formatado"
+        ) ||
         campo.includes("faturado")
     ) {
         return "text-indigo-700";
@@ -196,56 +225,84 @@ const CrudPage = ({
     isLoading = false,
     CustomForm,
     modalMaxWidth = "max-w-lg",
+    topContent,
     onDelete,
     onSave,
 }: CrudPageProps) => {
     const [items, setItems] =
-        useState<CrudItem[]>(initialData);
+        useState<CrudItem[]>(
+            initialData
+        );
 
     const [search, setSearch] =
         useState("");
 
-    const [editingId, setEditingId] = useState<
+    const [
+        editingId,
+        setEditingId,
+    ] = useState<
         string | number | null
     >(null);
 
-    const [formData, setFormData] = useState<
-        Record<string, string>
+    const [
+        formData,
+        setFormData,
+    ] = useState<
+        Record<string, any>
     >({});
 
-    const [showForm, setShowForm] =
-        useState(false);
+    const [
+        showForm,
+        setShowForm,
+    ] = useState(false);
 
-    const [currentPage, setCurrentPage] =
-        useState(1);
+    const [
+        currentPage,
+        setCurrentPage,
+    ] = useState(1);
 
     const [
         isDeleteModalOpen,
         setIsDeleteModalOpen,
     ] = useState(false);
 
-    const [itemToDelete, setItemToDelete] =
-        useState<string | number | null>(null);
+    const [
+        itemToDelete,
+        setItemToDelete,
+    ] = useState<
+        string | number | null
+    >(null);
 
-    const [isDeleting, setIsDeleting] =
-        useState(false);
+    const [
+        isDeleting,
+        setIsDeleting,
+    ] = useState(false);
 
     const [
         showDetailsModal,
         setShowDetailsModal,
     ] = useState(false);
 
-    const [selectedItem, setSelectedItem] =
-        useState<CrudItem | null>(null);
+    const [
+        selectedItem,
+        setSelectedItem,
+    ] = useState<CrudItem | null>(
+        null
+    );
 
-    const [isSaving, setIsSaving] =
-        useState(false);
+    const [
+        isSaving,
+        setIsSaving,
+    ] = useState(false);
 
-    const [internalLoading, setInternalLoading] =
-        useState(true);
+    const [
+        internalLoading,
+        setInternalLoading,
+    ] = useState(true);
 
     useEffect(() => {
         setItems(initialData);
+        setCurrentPage(1);
     }, [initialData]);
 
     useEffect(() => {
@@ -258,9 +315,10 @@ const CrudPage = ({
             return;
         }
 
-        const timer = window.setTimeout(() => {
-            setInternalLoading(false);
-        }, 500);
+        const timer =
+            window.setTimeout(() => {
+                setInternalLoading(false);
+            }, 500);
 
         return () => {
             window.clearTimeout(timer);
@@ -268,9 +326,10 @@ const CrudPage = ({
     }, [isLoading]);
 
     const filtered = useMemo(() => {
-        const pesquisaNormalizada = search
-            .trim()
-            .toLowerCase();
+        const pesquisaNormalizada =
+            search
+                .trim()
+                .toLowerCase();
 
         if (!pesquisaNormalizada) {
             return items;
@@ -283,31 +342,54 @@ const CrudPage = ({
                     column
                 )
                     .toLowerCase()
-                    .includes(pesquisaNormalizada)
+                    .includes(
+                        pesquisaNormalizada
+                    )
             )
         );
     }, [items, columns, search]);
 
     const totalPages = Math.ceil(
-        filtered.length / ITEMS_PER_PAGE
+        filtered.length /
+            ITEMS_PER_PAGE
     );
+
+    const paginaAtualValida =
+        totalPages > 0
+            ? Math.min(
+                  currentPage,
+                  totalPages
+              )
+            : 1;
 
     const startIndex =
-        (currentPage - 1) * ITEMS_PER_PAGE;
+        (paginaAtualValida - 1) *
+        ITEMS_PER_PAGE;
 
     const endIndex =
-        startIndex + ITEMS_PER_PAGE;
+        startIndex +
+        ITEMS_PER_PAGE;
 
-    const paginatedItems = filtered.slice(
-        startIndex,
-        endIndex
-    );
+    const paginatedItems =
+        filtered.slice(
+            startIndex,
+            endIndex
+        );
+
+    useEffect(() => {
+        if (
+            totalPages > 0 &&
+            currentPage > totalPages
+        ) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     const handleEdit = (
         item: CrudItem
     ) => {
         setEditingId(item.id);
-        setFormData(item);
+        setFormData({ ...item });
         setShowForm(true);
     };
 
@@ -327,99 +409,131 @@ const CrudPage = ({
         setFormData({});
     };
 
-    const handleSaveDefault = async () => {
-        try {
-            setIsSaving(true);
+    const handleSaveDefault =
+        async () => {
+            try {
+                setIsSaving(true);
 
-            const dataToSave = editingId
-                ? {
-                      id: editingId,
-                      ...formData,
-                  }
-                : formData;
+                const dataToSave =
+                    editingId !== null
+                        ? {
+                              id: editingId,
+                              ...formData,
+                          }
+                        : formData;
 
-            if (onSave) {
-                await onSave(dataToSave);
-            } else if (editingId !== null) {
-                setItems((currentItems) =>
-                    currentItems.map((item) =>
-                        item.id === editingId
-                            ? {
-                                  ...item,
-                                  ...formData,
-                              }
-                            : item
-                    )
+                if (onSave) {
+                    await onSave(
+                        dataToSave
+                    );
+                } else if (
+                    editingId !== null
+                ) {
+                    setItems(
+                        (
+                            currentItems
+                        ) =>
+                            currentItems.map(
+                                (item) =>
+                                    item.id ===
+                                    editingId
+                                        ? {
+                                              ...item,
+                                              ...formData,
+                                          }
+                                        : item
+                            )
+                    );
+                } else {
+                    setItems(
+                        (
+                            currentItems
+                        ) => [
+                            ...currentItems,
+                            {
+                                id: crypto.randomUUID(),
+                                ...formData,
+                            },
+                        ]
+                    );
+                }
+
+                setShowForm(false);
+                setEditingId(null);
+                setFormData({});
+            } catch (error) {
+                console.error(
+                    "Erro ao salvar registro:",
+                    error
                 );
-            } else {
-                setItems((currentItems) => [
-                    ...currentItems,
-                    {
-                        id: crypto.randomUUID(),
-                        ...formData,
-                    },
-                ]);
+            } finally {
+                setIsSaving(false);
             }
-
-            setShowForm(false);
-            setEditingId(null);
-            setFormData({});
-        } catch (error) {
-            console.error(
-                "Erro ao salvar registro:",
-                error
-            );
-        } finally {
-            setIsSaving(false);
-        }
-    };
+        };
 
     const handleDeleteClick = (
         id: string | number
     ) => {
         setItemToDelete(id);
-        setIsDeleteModalOpen(true);
+        setIsDeleteModalOpen(
+            true
+        );
     };
 
-    const confirmDelete = async () => {
-        if (itemToDelete === null) {
-            return;
-        }
-
-        try {
-            setIsDeleting(true);
-
-            if (onDelete) {
-                await onDelete(itemToDelete);
-            }
-
-            setItems((currentItems) =>
-                currentItems.filter(
-                    (item) =>
-                        item.id !== itemToDelete
-                )
-            );
-
+    const confirmDelete =
+        async () => {
             if (
-                paginatedItems.length === 1 &&
-                currentPage > 1
+                itemToDelete === null
             ) {
-                setCurrentPage(
-                    (currentPageValue) =>
-                        currentPageValue - 1
-                );
+                return;
             }
-        } catch (error) {
-            console.error(
-                "Erro ao excluir registro:",
-                error
-            );
-        } finally {
-            setIsDeleting(false);
-            setIsDeleteModalOpen(false);
-            setItemToDelete(null);
-        }
-    };
+
+            try {
+                setIsDeleting(true);
+
+                if (onDelete) {
+                    await onDelete(
+                        itemToDelete
+                    );
+                }
+
+                setItems(
+                    (
+                        currentItems
+                    ) =>
+                        currentItems.filter(
+                            (item) =>
+                                item.id !==
+                                itemToDelete
+                        )
+                );
+
+                if (
+                    paginatedItems.length ===
+                        1 &&
+                    currentPage > 1
+                ) {
+                    setCurrentPage(
+                        (
+                            currentPageValue
+                        ) =>
+                            currentPageValue -
+                            1
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "Erro ao excluir registro:",
+                    error
+                );
+            } finally {
+                setIsDeleting(false);
+                setIsDeleteModalOpen(
+                    false
+                );
+                setItemToDelete(null);
+            }
+        };
 
     const handleViewDetails = (
         item: CrudItem
@@ -457,6 +571,8 @@ const CrudPage = ({
                 )}
             </div>
 
+            {topContent}
+
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative max-w-sm flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -465,9 +581,13 @@ const CrudPage = ({
                         type="text"
                         placeholder="Pesquisar registros"
                         value={search}
-                        onChange={(event) =>
+                        onChange={(
+                            event
+                        ) =>
                             setSearch(
-                                event.target.value
+                                event
+                                    .target
+                                    .value
                             )
                         }
                         className="w-full rounded-xl border border-input bg-card py-2.5 pl-10 pr-10 text-sm text-foreground shadow-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
@@ -488,6 +608,7 @@ const CrudPage = ({
                 </div>
 
                 <Button
+                    type="button"
                     onClick={handleNew}
                     className="gap-2 rounded-lg shadow-sm"
                 >
@@ -498,8 +619,13 @@ const CrudPage = ({
 
             <Dialog
                 open={showForm}
-                onOpenChange={(open) => {
-                    if (!open && !isSaving) {
+                onOpenChange={(
+                    open
+                ) => {
+                    if (
+                        !open &&
+                        !isSaving
+                    ) {
                         closeForm();
                     }
                 }}
@@ -508,10 +634,11 @@ const CrudPage = ({
                     className={`${modalMaxWidth} max-h-[92vh] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-2xl`}
                 >
                     <div className="flex max-h-[92vh] flex-col">
-                        <DialogHeader className="border-b border-border bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 pr-12">
+                        <DialogHeader className="border-b border-border bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 pr-12 dark:from-blue-950/40 dark:to-indigo-950/40">
                             <div className="flex items-start gap-3">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700">
-                                    {editingId !== null ? (
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                    {editingId !==
+                                    null ? (
                                         <Pencil className="h-5 w-5" />
                                     ) : (
                                         <Plus className="h-5 w-5" />
@@ -520,13 +647,15 @@ const CrudPage = ({
 
                                 <div>
                                     <DialogTitle className="text-lg font-bold text-foreground">
-                                        {editingId !== null
+                                        {editingId !==
+                                        null
                                             ? "Editar registro"
                                             : "Novo registro"}
                                     </DialogTitle>
 
                                     <DialogDescription className="mt-1 text-sm leading-5 text-muted-foreground">
-                                        {editingId !== null
+                                        {editingId !==
+                                        null
                                             ? "Atualize as informações necessárias e confirme as alterações."
                                             : "Preencha os campos abaixo para cadastrar um novo registro."}
                                     </DialogDescription>
@@ -538,7 +667,8 @@ const CrudPage = ({
                             {CustomForm ? (
                                 <CustomForm
                                     initialData={
-                                        editingId !== null
+                                        editingId !==
+                                        null
                                             ? items.find(
                                                   (
                                                       item
@@ -549,24 +679,46 @@ const CrudPage = ({
                                               null
                                             : null
                                     }
-                                    onCancel={closeForm}
+                                    onCancel={
+                                        closeForm
+                                    }
                                     onSubmit={async (
                                         data: any
                                     ) => {
-                                        if (onSave) {
-                                            await onSave(
-                                                data
+                                        try {
+                                            setIsSaving(
+                                                true
+                                            );
+
+                                            if (
+                                                onSave
+                                            ) {
+                                                await onSave(
+                                                    data
+                                                );
+                                            }
+
+                                            setShowForm(
+                                                false
+                                            );
+                                            setEditingId(
+                                                null
+                                            );
+                                            setFormData(
+                                                {}
+                                            );
+                                        } finally {
+                                            setIsSaving(
+                                                false
                                             );
                                         }
-
-                                        closeForm();
                                     }}
                                 />
                             ) : (
                                 <div className="space-y-6">
                                     <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
                                         <div className="mb-5 flex items-start gap-3 border-b border-border pb-4">
-                                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
                                                 <ClipboardList className="h-4 w-4" />
                                             </span>
 
@@ -729,6 +881,7 @@ const CrudPage = ({
                                             ) : (
                                                 <>
                                                     <Save className="h-4 w-4" />
+
                                                     {editingId !==
                                                     null
                                                         ? "Atualizar"
@@ -745,8 +898,12 @@ const CrudPage = ({
             </Dialog>
 
             <Dialog
-                open={showDetailsModal}
-                onOpenChange={(open) => {
+                open={
+                    showDetailsModal
+                }
+                onOpenChange={(
+                    open
+                ) => {
                     if (!open) {
                         closeDetails();
                     }
@@ -754,16 +911,17 @@ const CrudPage = ({
             >
                 <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden rounded-xl border border-border bg-card p-0 shadow-2xl">
                     <div className="flex max-h-[90vh] flex-col">
-                        <DialogHeader className="border-b border-border bg-gradient-to-r from-slate-50 to-blue-50 px-6 py-5 pr-12">
+                        <DialogHeader className="border-b border-border bg-gradient-to-r from-slate-50 to-blue-50 px-6 py-5 pr-12 dark:from-slate-950/40 dark:to-blue-950/40">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-start gap-3">
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
                                         <Info className="h-5 w-5" />
                                     </span>
 
                                     <div>
                                         <DialogTitle className="text-lg font-bold text-foreground">
-                                            Detalhes do
+                                            Detalhes
+                                            do
                                             registro
                                         </DialogTitle>
 
@@ -778,7 +936,7 @@ const CrudPage = ({
                                 </div>
 
                                 {selectedItem && (
-                                    <span className="hidden max-w-[180px] truncate rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:block">
+                                    <span className="hidden max-w-[180px] truncate rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 sm:block">
                                         ID:{" "}
                                         {String(
                                             selectedItem.id
@@ -846,20 +1004,20 @@ const CrudPage = ({
                                 </section>
 
                                 {selectedItem.url_arquivo && (
-                                    <section className="mt-4 rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm">
+                                    <section className="mt-4 rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm dark:border-blue-900 dark:bg-blue-950/30">
                                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex items-start gap-3">
-                                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                                     <FileText className="h-5 w-5" />
                                                 </span>
 
                                                 <div>
-                                                    <p className="text-sm font-bold text-blue-700">
+                                                    <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
                                                         Documento
                                                         anexado
                                                     </p>
 
-                                                    <p className="mt-1 text-xs text-blue-700/80">
+                                                    <p className="mt-1 text-xs text-blue-700/80 dark:text-blue-300/80">
                                                         Existe
                                                         um
                                                         arquivo
@@ -873,7 +1031,7 @@ const CrudPage = ({
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                className="gap-2 border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                                                className="gap-2 border-blue-200 bg-white text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                                                 onClick={() =>
                                                     handleOpenDocument(
                                                         selectedItem.url_arquivo
@@ -990,7 +1148,9 @@ const CrudPage = ({
                                             <p className="text-xs">
                                                 Ajuste
                                                 sua
-                                                pesquisa
+                                                pesquisa,
+                                                o período
+                                                selecionado
                                                 ou
                                                 adicione
                                                 um novo
@@ -1040,7 +1200,7 @@ const CrudPage = ({
                                                         }
                                                         title="Ver detalhes"
                                                         aria-label="Ver detalhes"
-                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 transition-all hover:bg-blue-600 hover:text-white"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 transition-all hover:bg-blue-600 hover:text-white dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                     </button>
@@ -1054,7 +1214,7 @@ const CrudPage = ({
                                                         }
                                                         title="Editar"
                                                         aria-label="Editar"
-                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 transition-all hover:bg-amber-500 hover:text-white"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 transition-all hover:bg-amber-500 hover:text-white dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
                                                     >
                                                         <Pencil className="h-4 w-4" />
                                                     </button>
@@ -1068,7 +1228,7 @@ const CrudPage = ({
                                                         }
                                                         title="Excluir"
                                                         aria-label="Excluir"
-                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-600 hover:text-white"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-600 hover:text-white dark:border-red-900 dark:bg-red-950 dark:text-red-300"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
@@ -1083,12 +1243,13 @@ const CrudPage = ({
                 </div>
 
                 {!internalLoading &&
-                    totalPages > 1 && (
+                    filtered.length > 0 && (
                         <div className="flex flex-col gap-3 border-t border-border bg-card/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-sm text-muted-foreground">
                                 Mostrando{" "}
                                 <span className="font-medium text-foreground">
-                                    {startIndex + 1}
+                                    {startIndex +
+                                        1}
                                 </span>{" "}
                                 a{" "}
                                 <span className="font-medium text-foreground">
@@ -1106,91 +1267,118 @@ const CrudPage = ({
                                 resultados
                             </span>
 
-                            <div className="flex items-center gap-1.5">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        setCurrentPage(
-                                            (
-                                                current
-                                            ) =>
-                                                Math.max(
-                                                    1,
-                                                    current -
-                                                        1
-                                                )
-                                        )
-                                    }
-                                    disabled={
-                                        currentPage === 1
-                                    }
-                                    className="h-8 w-8 rounded-lg p-0"
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-
-                                {Array.from(
-                                    {
-                                        length: totalPages,
-                                    },
-                                    (_, index) =>
-                                        index + 1
-                                ).map((page) => (
+                            {totalPages > 1 && (
+                                <div className="flex items-center gap-1.5">
                                     <Button
-                                        key={page}
-                                        variant={
-                                            page ===
-                                            currentPage
-                                                ? "default"
-                                                : "outline"
-                                        }
+                                        type="button"
+                                        variant="outline"
                                         size="sm"
                                         onClick={() =>
                                             setCurrentPage(
-                                                page
+                                                (
+                                                    current
+                                                ) =>
+                                                    Math.max(
+                                                        1,
+                                                        current -
+                                                            1
+                                                    )
                                             )
                                         }
-                                        className="h-8 w-8 rounded-lg p-0 text-xs"
+                                        disabled={
+                                            paginaAtualValida ===
+                                            1
+                                        }
+                                        className="h-8 w-8 rounded-lg p-0"
                                     >
-                                        {page}
+                                        <ChevronLeft className="h-4 w-4" />
                                     </Button>
-                                ))}
 
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        setCurrentPage(
-                                            (
-                                                current
-                                            ) =>
-                                                Math.min(
-                                                    totalPages,
-                                                    current +
-                                                        1
-                                                )
+                                    {Array.from(
+                                        {
+                                            length: totalPages,
+                                        },
+                                        (
+                                            _,
+                                            index
+                                        ) =>
+                                            index +
+                                            1
+                                    ).map(
+                                        (page) => (
+                                            <Button
+                                                key={
+                                                    page
+                                                }
+                                                type="button"
+                                                variant={
+                                                    page ===
+                                                    paginaAtualValida
+                                                        ? "default"
+                                                        : "outline"
+                                                }
+                                                size="sm"
+                                                onClick={() =>
+                                                    setCurrentPage(
+                                                        page
+                                                    )
+                                                }
+                                                className="h-8 w-8 rounded-lg p-0 text-xs"
+                                            >
+                                                {
+                                                    page
+                                                }
+                                            </Button>
                                         )
-                                    }
-                                    disabled={
-                                        currentPage ===
-                                        totalPages
-                                    }
-                                    className="h-8 w-8 rounded-lg p-0"
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
+                                    )}
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setCurrentPage(
+                                                (
+                                                    current
+                                                ) =>
+                                                    Math.min(
+                                                        totalPages,
+                                                        current +
+                                                            1
+                                                    )
+                                            )
+                                        }
+                                        disabled={
+                                            paginaAtualValida ===
+                                            totalPages
+                                        }
+                                        className="h-8 w-8 rounded-lg p-0"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
             </div>
 
             <ConfirmDeleteModal
-                isOpen={isDeleteModalOpen}
-                onClose={() =>
-                    setIsDeleteModalOpen(false)
+                isOpen={
+                    isDeleteModalOpen
                 }
-                onConfirm={confirmDelete}
+                onClose={() => {
+                    if (!isDeleting) {
+                        setIsDeleteModalOpen(
+                            false
+                        );
+                        setItemToDelete(
+                            null
+                        );
+                    }
+                }}
+                onConfirm={
+                    confirmDelete
+                }
                 loading={isDeleting}
             />
         </div>
