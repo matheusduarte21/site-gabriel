@@ -1,34 +1,39 @@
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { signOut } from '../../lib/auth';
+import { ReactNode } from "react";
 
-const StaffHeader = () => {
-  const navigate = useNavigate();
+interface StaffHeaderProps {
+    title: string;
+    subtitle?: string;
+    action?: ReactNode;
+}
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      navigate('/staff/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
+const StaffHeader = ({
+    title,
+    subtitle,
+    action,
+}: StaffHeaderProps) => {
+    return (
+        <header className="mb-6 rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <h1 className="break-words text-xl font-bold text-foreground sm:text-2xl">
+                        {title}
+                    </h1>
 
-  return (
-    <div className="">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <button
-            onClick={handleLogout}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Sair
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+                    {subtitle && (
+                        <p className="mt-1 max-w-3xl text-sm leading-5 text-muted-foreground">
+                            {subtitle}
+                        </p>
+                    )}
+                </div>
+
+                {action && (
+                    <div className="flex w-full shrink-0 items-center sm:w-auto">
+                        {action}
+                    </div>
+                )}
+            </div>
+        </header>
+    );
 };
 
 export default StaffHeader;
