@@ -19,6 +19,7 @@ import ChamadoForm, {
 import FiltroMes, {
     ValorFiltroMes,
 } from "./FiltroMes";
+import ExportarExcelButton from "./ExportarExcelButton";
 import { getTodosTecnicos } from "../../services/Tecnicos/get-all-tecnicos.service";
 import { getTodosClientes } from "../../services/Clientes/get-all-cliente.service";
 import { getTodosStatus } from "../../services/status/get-all-status.service";
@@ -31,6 +32,7 @@ import {
     showSuccess,
 } from "../../lib/Utils/toast";
 import { Chamado } from "../../types/chamado.type";
+import { exportarChamadosExcel } from "../../services/export/exportar-chamados-excel.service";
 
 type ChamadoTabela = Chamado & {
     data_agendamento_formatada: string;
@@ -60,7 +62,9 @@ const formatadorMoeda =
 
 const obterMesAtual = (): string => {
     const hoje = new Date();
+
     const ano = hoje.getFullYear();
+
     const mes = String(
         hoje.getMonth() + 1
     ).padStart(2, "0");
@@ -241,6 +245,11 @@ const Chamados = () => {
     ] = useState<Chamado[]>([]);
 
     const [
+        tecnicosDetalhados,
+        setTecnicosDetalhados,
+    ] = useState<any[]>([]);
+
+    const [
         opcoesTecnicos,
         setOpcoesTecnicos,
     ] = useState<SelectOption[]>([]);
@@ -283,6 +292,10 @@ const Chamados = () => {
 
             setChamadosOriginais(
                 chamadosDB as unknown as Chamado[]
+            );
+
+            setTecnicosDetalhados(
+                tecnicosDB
             );
 
             setOpcoesTecnicos(
@@ -351,10 +364,7 @@ const Chamados = () => {
 
     const resumo = useMemo(() => {
         return chamadosFiltrados.reduce(
-            (
-                acumulado,
-                chamado
-            ) => {
+            (acumulado, chamado) => {
                 const faturado =
                     converterNumero(
                         chamado.valor_total_cliente
@@ -405,17 +415,14 @@ const Chamados = () => {
                         valorCliente -
                         valorTecnico;
 
-                    const dataReferencia =
-                        obterDataReferencia(
-                            chamado
-                        );
-
                     return {
                         ...chamado,
 
                         data_agendamento_formatada:
                             formatarData(
-                                dataReferencia
+                                obterDataReferencia(
+                                    chamado
+                                )
                             ),
 
                         valor_cliente_formatado:
@@ -453,6 +460,38 @@ const Chamados = () => {
                 }
             );
         }, [chamadosFiltrados]);
+
+    const handleExportarExcel =
+        async () => {
+            try {
+                await exportarChamadosExcel({
+                    chamados:
+                        chamadosFiltrados,
+                    periodo:
+                        mesSelecionado,
+                    tecnicos:
+                        opcoesTecnicos,
+                    clientes:
+                        opcoesClientes,
+                    status:
+                        opcoesStatus,
+                    tecnicosDetalhados,
+                });
+
+                showSuccess(
+                    "Planilha exportada com sucesso!"
+                );
+            } catch (error) {
+                console.error(
+                    "Erro ao exportar Excel:",
+                    error
+                );
+
+                showError(
+                    "Não foi possível gerar a planilha."
+                );
+            }
+        };
 
     const handleDeleteChamado =
         async (
@@ -541,7 +580,8 @@ const Chamados = () => {
             key: "status_id",
             label: "Status",
             type: "select",
-            options: opcoesStatus,
+            options:
+                opcoesStatus,
         },
         {
             key: "data_agendamento_formatada",
@@ -584,6 +624,16 @@ const Chamados = () => {
                             setMesSelecionado
                         }
                     />
+
+                    <div className="flex justify-end">
+                        <ExportarExcelButton
+                            onExport={
+                                handleExportarExcel
+                            }
+                            disabled={loading}
+                            label="Exportar relatório Excel"
+                        />
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <CardResumo
