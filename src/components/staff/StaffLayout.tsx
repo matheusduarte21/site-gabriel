@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { TecnicoProvider } from "../../context/TecnicoContext";
 import StaffSidebar from "./StaffSidebar";
-import StaffMobileNav from "./StaffMobileNav";
 import teccorpLogo from "../../assests/TECCORP LOGO/2.png";
 
 const StaffLayoutContent = () => {
@@ -59,8 +58,6 @@ const StaffLayoutContent = () => {
             <main className="min-h-screen overflow-x-hidden p-4 pb-24 sm:p-5 sm:pb-24 lg:ml-64 lg:p-6">
                 <Outlet />
             </main>
-
-            <StaffMobileNav />
         </div>
     );
 };

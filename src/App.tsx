@@ -27,6 +27,7 @@ import StaffPerfil from "./components/staff/StaffPerfil";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Chamados from "./components/admin/ChamadosTemp.";
+import StaffVideos from "./components/staff/StaffVideos";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -165,6 +166,11 @@ function App() {
                         <Route
                             path="perfil"
                             element={<StaffPerfil />}
+                        />
+
+                        <Route
+                            path="videos"
+                            element={<StaffVideos />}
                         />
                     </Route>
 

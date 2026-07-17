@@ -232,25 +232,6 @@ const StaffDashboard = () => {
                 }
             />
 
-            <section className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-700 p-5 text-white shadow-lg sm:p-7">
-                <div className="relative z-10 max-w-2xl">
-                    <p className="text-sm font-medium text-blue-100">
-                        Portal do técnico
-                    </p>
-
-                    <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-                        Organize sua rotina de atendimentos
-                    </h2>
-
-                    <p className="mt-3 text-sm leading-6 text-blue-100">
-                        Consulte seus chamados, confirme
-                        os atendimentos e atualize o
-                        andamento diretamente pelo
-                        celular.
-                    </p>
-                </div>
-            </section>
-
             {erroChamados && (
                 <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3">

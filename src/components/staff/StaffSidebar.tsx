@@ -3,6 +3,7 @@ import {
     useNavigate,
 } from "react-router-dom";
 import {
+    BookOpen,
     ChevronUp,
     ClipboardList,
     LayoutDashboard,
@@ -48,6 +49,11 @@ const navItems = [
         to: "/staff/perfil",
         icon: UserCircle,
         label: "Meu perfil",
+    },
+    {
+        to: "/staff/videos",
+        icon: BookOpen,
+        label: "Vídeos e aulas",
     },
 ];
 
