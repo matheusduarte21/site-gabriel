@@ -16,19 +16,18 @@ import AdminHome from "./components/admin/AdminHome";
 import Clientes from "./components/admin/Clientes";
 import Tecnicos from "./components/admin/Tecnicos";
 import Usuarios from "./components/admin/Usuarios";
-import LoginAdmin from "./components/admin/LoginAdmin";
 import Perfil from "./components/admin/Perfil";
-import StaffLogin from "./components/staff/StaffLogin";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StaffLayout from "./components/staff/StaffLayout";
 import StaffDashboard from "./components/staff/StaffDashboard";
 import StaffChamados from "./components/staff/StaffChamados";
 import StaffAdiantamentos from "./components/staff/StaffAdiantamentos";
 import StaffPerfil from "./components/staff/StaffPerfil";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
-import Chamados from "./components/admin/ChamadosTemp.";
 import StaffVideos from "./components/staff/StaffVideos";
+import { AuthProvider } from "./context/AuthContext";
 import BibliotecaVideos from "./components/admin/BibliotecaVideos/BibliotecaVideos";
+import Chamados from "./components/admin/ChamadosTemp.";
+import Login from "./components/auth/Login";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -77,19 +76,36 @@ function App() {
                     />
 
                     <Route
+                        path="/login"
+                        element={<Login />}
+                    />
+
+                    <Route
                         path="/admin/login"
-                        element={<LoginAdmin />}
+                        element={
+                            <Navigate
+                                to="/login"
+                                replace
+                            />
+                        }
                     />
 
                     <Route
                         path="/staff/login"
-                        element={<StaffLogin />}
+                        element={
+                            <Navigate
+                                to="/login"
+                                replace
+                            />
+                        }
                     />
 
                     <Route
                         path="/admin"
                         element={
-                            <ProtectedRoute requireAdmin>
+                            <ProtectedRoute
+                                requireAdmin
+                            >
                                 <AdminLayout />
                             </ProtectedRoute>
                         }
@@ -97,11 +113,6 @@ function App() {
                         <Route
                             index
                             element={<AdminHome />}
-                        />
-
-                        <Route
-                            path="videos"
-                            element={<BibliotecaVideos />}
                         />
 
                         <Route
@@ -120,6 +131,13 @@ function App() {
                         />
 
                         <Route
+                            path="videos"
+                            element={
+                                <BibliotecaVideos />
+                            }
+                        />
+
+                        <Route
                             path="usuarios"
                             element={<Usuarios />}
                         />
@@ -133,7 +151,9 @@ function App() {
                     <Route
                         path="/staff"
                         element={
-                            <ProtectedRoute requireTecnico>
+                            <ProtectedRoute
+                                requireTecnico
+                            >
                                 <StaffLayout />
                             </ProtectedRoute>
                         }
@@ -163,6 +183,13 @@ function App() {
                         />
 
                         <Route
+                            path="videos"
+                            element={
+                                <StaffVideos />
+                            }
+                        />
+
+                        <Route
                             path="adiantamentos"
                             element={
                                 <StaffAdiantamentos />
@@ -171,12 +198,9 @@ function App() {
 
                         <Route
                             path="perfil"
-                            element={<StaffPerfil />}
-                        />
-
-                        <Route
-                            path="videos"
-                            element={<StaffVideos />}
+                            element={
+                                <StaffPerfil />
+                            }
                         />
                     </Route>
 

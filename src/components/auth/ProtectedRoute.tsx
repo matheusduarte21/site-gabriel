@@ -3,7 +3,10 @@ import {
     useLocation,
 } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import {
+    obterRotaInicialPorPerfil,
+    useAuth,
+} from "../../context/AuthContext";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -31,13 +34,14 @@ const ProtectedRoute = ({
     } = useAuth();
 
     const precisaTecnico =
-        requireTecnico || requireStaff;
+        requireTecnico ||
+        requireStaff;
 
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-700" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
 
                     <p className="text-sm font-medium text-muted-foreground">
                         Verificando acesso...
@@ -48,101 +52,54 @@ const ProtectedRoute = ({
     }
 
     if (!user) {
-        const loginPath = requireAdmin
-            ? "/admin/login"
-            : precisaTecnico
-            ? "/staff/login"
-            : requireCliente
-            ? "/cliente/login"
-            : "/";
-
         return (
             <Navigate
-                to={loginPath}
+                to="/login"
                 replace
                 state={{
-                    from: location.pathname,
+                    from:
+                        location.pathname,
                 }}
             />
         );
     }
 
-    if (requireAdmin && !isAdmin) {
-        if (isTecnico) {
-            return (
-                <Navigate
-                    to="/staff/dashboard"
-                    replace
-                />
-            );
-        }
+    const rotaCorreta =
+        obterRotaInicialPorPerfil(
+            user.tipo_perfil_id
+        ) || "/";
 
-        if (isCliente) {
-            return (
-                <Navigate
-                    to="/cliente"
-                    replace
-                />
-            );
-        }
-
+    if (
+        requireAdmin &&
+        !isAdmin
+    ) {
         return (
             <Navigate
-                to="/admin/login"
+                to={rotaCorreta}
                 replace
             />
         );
     }
 
-    if (precisaTecnico && !isTecnico) {
-        if (isAdmin) {
-            return (
-                <Navigate
-                    to="/admin"
-                    replace
-                />
-            );
-        }
-
-        if (isCliente) {
-            return (
-                <Navigate
-                    to="/cliente"
-                    replace
-                />
-            );
-        }
-
+    if (
+        precisaTecnico &&
+        !isTecnico
+    ) {
         return (
             <Navigate
-                to="/staff/login"
+                to={rotaCorreta}
                 replace
             />
         );
     }
 
-    if (requireCliente && !isCliente) {
-        if (isAdmin) {
-            return (
-                <Navigate
-                    to="/admin"
-                    replace
-                />
-            );
-        }
-
-        if (isTecnico) {
-            return (
-                <Navigate
-                    to="/staff/dashboard"
-                    replace
-                />
-            );
-        }
-
+    if (
+        requireCliente &&
+        !isCliente
+    ) {
         return (
             <Navigate
-                to="/cliente/login"
+                to={rotaCorreta}
                 replace
             />
         );

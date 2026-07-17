@@ -1,108 +1,216 @@
-import React, { useState } from 'react';
-import { Menu, X, Laptop } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import logo from '../assests/TECCORP LOGO/4.png'
+import {
+    useState,
+} from "react";
+import {
+    LogIn,
+    Menu,
+    X,
+} from "lucide-react";
+import {
+    useNavigate,
+} from "react-router-dom";
+import logo from "../assests/TECCORP LOGO/4.png";
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const handleLoginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const route = e.target.value;
-    if (route) {
-      navigate(route);
-    }
-  };
+    const [isOpen, setIsOpen] =
+        useState(false);
 
-  return (
-    <nav className="bg-white shadow-md fixed w-full z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <span className="ml-2 text-xl font-bold text-gray-900">
-               <img className="h-[72px] mt-[18px] w-[250px] object-cover" src={logo} alt="" />
-            </span>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-8">
-            <NavLink href="#home">Início</NavLink>
-            <NavLink href="#services">Serviços</NavLink>
-            <NavLink href="#about">Sobre Nós</NavLink>
-            <NavLink href="#clients">Clientes</NavLink>
-            <NavLink href="#contact">Contato</NavLink>
-            
-            <select
-              onChange={handleLoginChange}
-              className="px-4 py-2 text-sm bg-blue-50 text-blue-700 border-0 rounded-full 
-                        hover:bg-blue-100 transition-colors duration-200 cursor-pointer 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              defaultValue=""
-            >
-              <option value="" disabled>Área de login</option>
-              <option value="/admin/login">Admin</option>
-              <option value="/staff/login">Funcionário</option>
-            </select>
-          </div>
+    const abrirLogin = () => {
+        setIsOpen(false);
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-gray-900"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-      </div>
+        navigate("/login");
+    };
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white">
-            <MobileNavLink href="#home">Início</MobileNavLink>
-            <MobileNavLink href="#services">Serviços</MobileNavLink>
-            <MobileNavLink href="#about">Sobre Nós</MobileNavLink>
-            <MobileNavLink href="#clients">Clientes</MobileNavLink>
-            <MobileNavLink href="#contact">Contato</MobileNavLink>
-            
-            {/* Mobile Login Selection */}
-            <div className="px-3 py-2">
-              <select
-                onChange={handleLoginChange}
-                className="w-full px-4 py-2 text-sm bg-blue-50 text-blue-700 border-0 
-                          rounded-full hover:bg-blue-100 transition-colors duration-200 
-                          cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                defaultValue=""
-              >
-                <option value="" disabled>Área Restrita</option>
-                <option value="/admin/login">Admin</option>
-                <option value="/staff/login">Funcionário</option>
-              </select>
+    return (
+        <nav className="fixed z-50 w-full border-b border-slate-100 bg-white/95 shadow-sm backdrop-blur">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex h-16 items-center justify-between">
+                    <a
+                        href="#home"
+                        className="flex items-center"
+                    >
+                        <img
+                            src={logo}
+                            alt="Teccorp"
+                            className="h-14 w-[210px] object-contain"
+                        />
+                    </a>
+
+                    <div className="hidden items-center gap-6 md:flex">
+                        <NavLink href="#home">
+                            Início
+                        </NavLink>
+
+                        <NavLink href="#services">
+                            Serviços
+                        </NavLink>
+
+                        <NavLink href="#about">
+                            Sobre Nós
+                        </NavLink>
+
+                        <NavLink href="#clients">
+                            Clientes
+                        </NavLink>
+
+                        <NavLink href="#contact">
+                            Contato
+                        </NavLink>
+
+                        <button
+                            type="button"
+                            onClick={
+                                abrirLogin
+                            }
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-blue-700 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-800"
+                        >
+                            <LogIn className="h-4 w-4" />
+                            Entrar
+                        </button>
+                    </div>
+
+                    <div className="flex items-center md:hidden">
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setIsOpen(
+                                    (valor) =>
+                                        !valor
+                                )
+                            }
+                            aria-label={
+                                isOpen
+                                    ? "Fechar menu"
+                                    : "Abrir menu"
+                            }
+                            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100"
+                        >
+                            {isOpen ? (
+                                <X className="h-6 w-6" />
+                            ) : (
+                                <Menu className="h-6 w-6" />
+                            )}
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
+
+            {isOpen && (
+                <div className="border-t border-slate-100 bg-white md:hidden">
+                    <div className="space-y-1 px-4 py-4">
+                        <MobileNavLink
+                            href="#home"
+                            onClick={() =>
+                                setIsOpen(
+                                    false
+                                )
+                            }
+                        >
+                            Início
+                        </MobileNavLink>
+
+                        <MobileNavLink
+                            href="#services"
+                            onClick={() =>
+                                setIsOpen(
+                                    false
+                                )
+                            }
+                        >
+                            Serviços
+                        </MobileNavLink>
+
+                        <MobileNavLink
+                            href="#about"
+                            onClick={() =>
+                                setIsOpen(
+                                    false
+                                )
+                            }
+                        >
+                            Sobre Nós
+                        </MobileNavLink>
+
+                        <MobileNavLink
+                            href="#clients"
+                            onClick={() =>
+                                setIsOpen(
+                                    false
+                                )
+                            }
+                        >
+                            Clientes
+                        </MobileNavLink>
+
+                        <MobileNavLink
+                            href="#contact"
+                            onClick={() =>
+                                setIsOpen(
+                                    false
+                                )
+                            }
+                        >
+                            Contato
+                        </MobileNavLink>
+
+                        <button
+                            type="button"
+                            onClick={
+                                abrirLogin
+                            }
+                            className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-sm font-bold text-white hover:bg-blue-800"
+                        >
+                            <LogIn className="h-4 w-4" />
+                            Entrar no sistema
+                        </button>
+                    </div>
+                </div>
+            )}
+        </nav>
+    );
 };
 
-const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <a
-    href={href}
-    className="text-gray-700 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors"
-  >
-    {children}
-  </a>
-);
+interface NavLinkProps {
+    href: string;
+    children: React.ReactNode;
+}
 
-const MobileNavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <a
-    href={href}
-    className="block text-gray-700 hover:text-blue-700 px-3 py-2 text-base font-medium"
-  >
-    {children}
-  </a>
-);
+const NavLink = ({
+    href,
+    children,
+}: NavLinkProps) => {
+    return (
+        <a
+            href={href}
+            className="px-2 py-2 text-sm font-medium text-slate-700 transition-colors hover:text-blue-700"
+        >
+            {children}
+        </a>
+    );
+};
+
+interface MobileNavLinkProps {
+    href: string;
+    children: React.ReactNode;
+    onClick: () => void;
+}
+
+const MobileNavLink = ({
+    href,
+    children,
+    onClick,
+}: MobileNavLinkProps) => {
+    return (
+        <a
+            href={href}
+            onClick={onClick}
+            className="block rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+        >
+            {children}
+        </a>
+    );
+};
 
 export default Navbar;

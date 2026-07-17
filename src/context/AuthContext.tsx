@@ -10,6 +10,11 @@ import type { User } from "@supabase/supabase-js";
 import supabase from "../lib/supabase";
 import { getUsuarioSistemaAtual } from "../services/auth/get-usuario-sistema-atual.service";
 
+export type TipoPerfilSistema =
+    | 1
+    | 2
+    | 3;
+
 export type UsuarioAutenticado = User & {
     bancoId: string | null;
     tipo_perfil_id: number | null;
@@ -24,12 +29,34 @@ interface AuthContextType {
     isTecnico: boolean;
     isStaff: boolean;
     isCliente: boolean;
+    rotaInicial: string | null;
     refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>(
-    {} as AuthContextType
-);
+export const obterRotaInicialPorPerfil = (
+    tipoPerfilId: number | null | undefined
+): string | null => {
+    const perfil = Number(tipoPerfilId);
+
+    if (perfil === 1) {
+        return "/admin";
+    }
+
+    if (perfil === 2) {
+        return "/staff/dashboard";
+    }
+
+    if (perfil === 3) {
+        return "/cliente";
+    }
+
+    return null;
+};
+
+const AuthContext =
+    createContext<AuthContextType>(
+        {} as AuthContextType
+    );
 
 export const AuthProvider = ({
     children,
@@ -37,9 +64,12 @@ export const AuthProvider = ({
     children: React.ReactNode;
 }) => {
     const [user, setUser] =
-        useState<UsuarioAutenticado | null>(null);
+        useState<UsuarioAutenticado | null>(
+            null
+        );
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] =
+        useState(true);
 
     const carregarUsuario = useCallback(
         async (authUser: User | null) => {
@@ -51,17 +81,27 @@ export const AuthProvider = ({
 
             try {
                 const usuarioSistema =
-                    await getUsuarioSistemaAtual(authUser);
+                    await getUsuarioSistemaAtual(
+                        authUser
+                    );
 
-                let tecnicoId: string | null = null;
-                let tecnicoNome: string | null = null;
+                if (!usuarioSistema) {
+                    setUser(null);
+                    return;
+                }
 
-                if (
-                    usuarioSistema &&
-                    Number(
-                        usuarioSistema.tipo_perfil_id
-                    ) === 2
-                ) {
+                const tipoPerfilId = Number(
+                    usuarioSistema.tipo_perfil_id
+                );
+
+                let tecnicoId: string | null =
+                    null;
+
+                let tecnicoNome:
+                    | string
+                    | null = null;
+
+                if (tipoPerfilId === 2) {
                     const {
                         data: tecnico,
                         error: tecnicoError,
@@ -81,23 +121,25 @@ export const AuthProvider = ({
                         );
                     }
 
-                    tecnicoId = tecnico?.id ?? null;
-                    tecnicoNome = tecnico?.nome ?? null;
+                    tecnicoId =
+                        tecnico?.id ?? null;
+
+                    tecnicoNome =
+                        tecnico?.nome ?? null;
                 }
 
                 setUser({
                     ...authUser,
                     bancoId:
-                        usuarioSistema?.id ?? null,
+                        usuarioSistema.id,
                     tipo_perfil_id:
-                        usuarioSistema?.tipo_perfil_id ??
-                        null,
+                        tipoPerfilId,
                     tecnicoId,
                     tecnicoNome,
                 });
             } catch (error) {
                 console.error(
-                    "Erro ao carregar perfil do usuário:",
+                    "Erro ao carregar usuário:",
                     error
                 );
 
@@ -109,82 +151,118 @@ export const AuthProvider = ({
         []
     );
 
-    const refreshUser = useCallback(async () => {
-        setLoading(true);
+    const refreshUser =
+        useCallback(async () => {
+            try {
+                setLoading(true);
 
-        const {
-            data: { user: authUser },
-            error,
-        } = await supabase.auth.getUser();
+                const {
+                    data: {
+                        user: authUser,
+                    },
+                    error,
+                } =
+                    await supabase.auth.getUser();
 
-        if (error) {
-            console.error(
-                "Erro ao atualizar usuário:",
-                error.message
-            );
+                if (error) {
+                    throw error;
+                }
 
-            setUser(null);
-            setLoading(false);
-            return;
-        }
-
-        await carregarUsuario(authUser);
-    }, [carregarUsuario]);
-
-    useEffect(() => {
-        const iniciarSessao = async () => {
-            setLoading(true);
-
-            const {
-                data: { session },
-                error,
-            } = await supabase.auth.getSession();
-
-            if (error) {
+                await carregarUsuario(
+                    authUser
+                );
+            } catch (error) {
                 console.error(
-                    "Erro ao recuperar sessão:",
-                    error.message
+                    "Erro ao atualizar usuário:",
+                    error
                 );
 
                 setUser(null);
                 setLoading(false);
-                return;
             }
+        }, [carregarUsuario]);
 
-            await carregarUsuario(
-                session?.user ?? null
-            );
-        };
+    useEffect(() => {
+        let ativo = true;
 
-        iniciarSessao();
+        const iniciarSessao =
+            async () => {
+                try {
+                    setLoading(true);
+
+                    const {
+                        data: { session },
+                        error,
+                    } =
+                        await supabase.auth.getSession();
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    if (ativo) {
+                        await carregarUsuario(
+                            session?.user ??
+                                null
+                        );
+                    }
+                } catch (error) {
+                    console.error(
+                        "Erro ao recuperar sessão:",
+                        error
+                    );
+
+                    if (ativo) {
+                        setUser(null);
+                        setLoading(false);
+                    }
+                }
+            };
+
+        void iniciarSessao();
 
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange(
-            (_event, session) => {
-                setLoading(true);
+        } =
+            supabase.auth.onAuthStateChange(
+                (_event, session) => {
+                    if (!ativo) {
+                        return;
+                    }
 
-                void carregarUsuario(
-                    session?.user ?? null
-                );
-            }
-        );
+                    setLoading(true);
+
+                    void carregarUsuario(
+                        session?.user ??
+                            null
+                    );
+                }
+            );
 
         return () => {
+            ativo = false;
             subscription.unsubscribe();
         };
     }, [carregarUsuario]);
 
     const isAdmin =
-        Number(user?.tipo_perfil_id) === 1;
+        Number(user?.tipo_perfil_id) ===
+        1;
 
     const isTecnico =
-        Number(user?.tipo_perfil_id) === 2;
+        Number(user?.tipo_perfil_id) ===
+        2;
 
     const isCliente =
-        Number(user?.tipo_perfil_id) === 3;
+        Number(user?.tipo_perfil_id) ===
+        3;
 
     const isStaff = isTecnico;
+
+    const rotaInicial =
+        obterRotaInicialPorPerfil(
+            user?.tipo_perfil_id
+        );
 
     const value = useMemo(
         () => ({
@@ -194,6 +272,7 @@ export const AuthProvider = ({
             isTecnico,
             isStaff,
             isCliente,
+            rotaInicial,
             refreshUser,
         }),
         [
@@ -203,12 +282,15 @@ export const AuthProvider = ({
             isTecnico,
             isStaff,
             isCliente,
+            rotaInicial,
             refreshUser,
         ]
     );
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext.Provider
+            value={value}
+        >
             {children}
         </AuthContext.Provider>
     );
