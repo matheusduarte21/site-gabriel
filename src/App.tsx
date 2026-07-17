@@ -28,6 +28,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Chamados from "./components/admin/ChamadosTemp.";
 import StaffVideos from "./components/staff/StaffVideos";
+import BibliotecaVideos from "./components/admin/BibliotecaVideos/BibliotecaVideos";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -96,6 +97,11 @@ function App() {
                         <Route
                             index
                             element={<AdminHome />}
+                        />
+
+                        <Route
+                            path="videos"
+                            element={<BibliotecaVideos />}
                         />
 
                         <Route

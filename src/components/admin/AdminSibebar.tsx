@@ -9,6 +9,7 @@ import {
 import {
     ChevronUp,
     ClipboardList,
+    GraduationCap,
     LayoutDashboard,
     Loader2,
     LogOut,
@@ -55,6 +56,11 @@ const navItems = [
         to: "/admin/perfil",
         icon: UserCircle,
         label: "Perfil",
+    },
+    {
+        to: "/admin/videos",
+        icon: GraduationCap,
+        label: "Vídeos e aulas",
     },
 ];
 
