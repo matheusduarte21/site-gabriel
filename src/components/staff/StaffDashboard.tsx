@@ -9,6 +9,8 @@ import {
     ArrowRight,
     CalendarDays,
     CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
     CircleDollarSign,
     ClipboardList,
     Clock3,
@@ -40,6 +42,17 @@ interface CardResumoProps {
     icon: ReactNode;
     className: string;
 }
+
+interface PaginacaoCompactaProps {
+    paginaAtual: number;
+    totalPaginas: number;
+    totalRegistros: number;
+    inicioRegistro: number;
+    fimRegistro: number;
+    onChange: (pagina: number) => void;
+}
+
+const ITENS_POR_PAGINA = 2;
 
 const CardResumo = ({
     titulo,
@@ -75,6 +88,79 @@ const CardResumo = ({
     );
 };
 
+const PaginacaoCompacta = ({
+    paginaAtual,
+    totalPaginas,
+    totalRegistros,
+    inicioRegistro,
+    fimRegistro,
+    onChange,
+}: PaginacaoCompactaProps) => {
+    if (
+        totalRegistros === 0 ||
+        totalPaginas <= 1
+    ) {
+        return null;
+    }
+
+    return (
+        <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-xs text-muted-foreground sm:text-left">
+                Mostrando{" "}
+                <span className="font-bold text-foreground">
+                    {inicioRegistro}
+                </span>{" "}
+                até{" "}
+                <span className="font-bold text-foreground">
+                    {fimRegistro}
+                </span>{" "}
+                de{" "}
+                <span className="font-bold text-foreground">
+                    {totalRegistros}
+                </span>
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+                <button
+                    type="button"
+                    onClick={() =>
+                        onChange(
+                            paginaAtual - 1
+                        )
+                    }
+                    disabled={paginaAtual === 1}
+                    aria-label="Página anterior"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <span className="min-w-[72px] text-center text-xs font-bold text-foreground">
+                    {paginaAtual} de{" "}
+                    {totalPaginas}
+                </span>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        onChange(
+                            paginaAtual + 1
+                        )
+                    }
+                    disabled={
+                        paginaAtual ===
+                        totalPaginas
+                    }
+                    aria-label="Próxima página"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const StaffDashboard = () => {
     const {
         tecnico,
@@ -85,13 +171,25 @@ const StaffDashboard = () => {
     const [chamados, setChamados] =
         useState<ChamadoTecnicoPortal[]>([]);
 
-    const [loadingChamados, setLoadingChamados] =
-        useState(true);
+    const [
+        loadingChamados,
+        setLoadingChamados,
+    ] = useState(true);
 
     const [
         erroChamados,
         setErroChamados,
     ] = useState<string | null>(null);
+
+    const [
+        paginaProximos,
+        setPaginaProximos,
+    ] = useState(1);
+
+    const [
+        paginaValidacao,
+        setPaginaValidacao,
+    ] = useState(1);
 
     const carregarChamados = async () => {
         try {
@@ -131,35 +229,38 @@ const StaffDashboard = () => {
                         .validacao === "pendente"
             ).length;
 
-        const emAndamento = chamados.filter(
-            (chamado) => {
+        const emAndamento =
+            chamados.filter((chamado) => {
                 const codigo =
                     chamado.acompanhamento
-                        ?.status_tecnico?.codigo;
+                        ?.status_tecnico
+                        ?.codigo;
 
                 return [
                     "em_deslocamento",
                     "chegou_local",
                     "atendimento_iniciado",
                 ].includes(codigo || "");
-            }
-        ).length;
+            }).length;
 
-        const finalizados = chamados.filter(
-            (chamado) =>
-                chamado.acompanhamento
-                    ?.status_tecnico?.codigo ===
-                "atendimento_finalizado"
-        ).length;
+        const finalizados =
+            chamados.filter(
+                (chamado) =>
+                    chamado.acompanhamento
+                        ?.status_tecnico
+                        ?.codigo ===
+                    "atendimento_finalizado"
+            ).length;
 
-        const totalReceber = chamados.reduce(
-            (total, chamado) =>
-                total +
-                converterNumero(
-                    chamado.valor_total_tecnico
-                ),
-            0
-        );
+        const totalReceber =
+            chamados.reduce(
+                (total, chamado) =>
+                    total +
+                    converterNumero(
+                        chamado.valor_total_tecnico
+                    ),
+                0
+            );
 
         return {
             total: chamados.length,
@@ -170,34 +271,140 @@ const StaffDashboard = () => {
         };
     }, [chamados]);
 
-    const proximosChamados = useMemo(() => {
-        const agora = Date.now();
+    const todosProximosChamados =
+        useMemo(() => {
+            const agora = Date.now();
 
-        return chamados
-            .filter(
-                (chamado) =>
-                    obterTimestampChamado(
-                        chamado
-                    ) >= agora
-            )
-            .sort(
-                (a, b) =>
-                    obterTimestampChamado(a) -
-                    obterTimestampChamado(b)
-            )
-            .slice(0, 4);
-    }, [chamados]);
+            return chamados
+                .filter(
+                    (chamado) =>
+                        obterTimestampChamado(
+                            chamado
+                        ) >= agora
+                )
+                .sort(
+                    (a, b) =>
+                        obterTimestampChamado(a) -
+                        obterTimestampChamado(b)
+                );
+        }, [chamados]);
 
-    const aguardandoValidacao = useMemo(() => {
-        return chamados
-            .filter(
+    const todosAguardandoValidacao =
+        useMemo(() => {
+            return chamados.filter(
                 (chamado) =>
                     !chamado.acompanhamento ||
                     chamado.acompanhamento
                         .validacao === "pendente"
+            );
+        }, [chamados]);
+
+    const totalPaginasProximos =
+        Math.max(
+            1,
+            Math.ceil(
+                todosProximosChamados.length /
+                    ITENS_POR_PAGINA
             )
-            .slice(0, 4);
-    }, [chamados]);
+        );
+
+    const totalPaginasValidacao =
+        Math.max(
+            1,
+            Math.ceil(
+                todosAguardandoValidacao.length /
+                    ITENS_POR_PAGINA
+            )
+        );
+
+    useEffect(() => {
+        if (
+            paginaProximos >
+            totalPaginasProximos
+        ) {
+            setPaginaProximos(
+                totalPaginasProximos
+            );
+        }
+    }, [
+        paginaProximos,
+        totalPaginasProximos,
+    ]);
+
+    useEffect(() => {
+        if (
+            paginaValidacao >
+            totalPaginasValidacao
+        ) {
+            setPaginaValidacao(
+                totalPaginasValidacao
+            );
+        }
+    }, [
+        paginaValidacao,
+        totalPaginasValidacao,
+    ]);
+
+    const proximosChamados =
+        useMemo(() => {
+            const inicio =
+                (paginaProximos - 1) *
+                ITENS_POR_PAGINA;
+
+            return todosProximosChamados.slice(
+                inicio,
+                inicio +
+                    ITENS_POR_PAGINA
+            );
+        }, [
+            todosProximosChamados,
+            paginaProximos,
+        ]);
+
+    const aguardandoValidacao =
+        useMemo(() => {
+            const inicio =
+                (paginaValidacao - 1) *
+                ITENS_POR_PAGINA;
+
+            return todosAguardandoValidacao.slice(
+                inicio,
+                inicio +
+                    ITENS_POR_PAGINA
+            );
+        }, [
+            todosAguardandoValidacao,
+            paginaValidacao,
+        ]);
+
+    const inicioRegistroProximos =
+        todosProximosChamados.length === 0
+            ? 0
+            : (paginaProximos - 1) *
+                  ITENS_POR_PAGINA +
+              1;
+
+    const fimRegistroProximos =
+        Math.min(
+            paginaProximos *
+                ITENS_POR_PAGINA,
+            todosProximosChamados.length
+        );
+
+    const inicioRegistroValidacao =
+        todosAguardandoValidacao.length ===
+        0
+            ? 0
+            : (paginaValidacao - 1) *
+                  ITENS_POR_PAGINA +
+              1;
+
+    const fimRegistroValidacao =
+        Math.min(
+            paginaValidacao *
+                ITENS_POR_PAGINA,
+            todosAguardandoValidacao.length
+        );
 
     if (loadingTecnico) {
         return (
@@ -336,7 +543,7 @@ const StaffDashboard = () => {
             </section>
 
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <section className="rounded-xl border border-border bg-card shadow-sm">
+                <section className="flex min-h-[410px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <div className="flex items-center justify-between border-b border-border p-5">
                         <div>
                             <h3 className="font-bold text-foreground">
@@ -351,21 +558,23 @@ const StaffDashboard = () => {
                         <CalendarDays className="h-5 w-5 text-primary" />
                     </div>
 
-                    <div className="divide-y divide-border">
+                    <div className="flex-1 divide-y divide-border">
                         {loadingChamados ? (
                             <div className="p-6 text-center text-sm text-muted-foreground">
                                 Carregando chamados...
                             </div>
                         ) : proximosChamados.length ===
                           0 ? (
-                            <div className="p-6 text-center text-sm text-muted-foreground">
+                            <div className="flex min-h-[220px] items-center justify-center p-6 text-center text-sm text-muted-foreground">
                                 Nenhum atendimento futuro encontrado.
                             </div>
                         ) : (
                             proximosChamados.map(
                                 (chamado) => (
                                     <div
-                                        key={chamado.id}
+                                        key={String(
+                                            chamado.id
+                                        )}
                                         className="p-5"
                                     >
                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -379,7 +588,8 @@ const StaffDashboard = () => {
 
                                                 <p className="mt-1 truncate text-sm text-muted-foreground">
                                                     {chamado.empresa ||
-                                                        chamado.cliente
+                                                        chamado
+                                                            .cliente
                                                             ?.nome ||
                                                         "Empresa não informada"}
                                                 </p>
@@ -401,6 +611,7 @@ const StaffDashboard = () => {
                                         <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                                             <div className="flex items-center gap-2">
                                                 <CalendarDays className="h-4 w-4 shrink-0" />
+
                                                 {formatarData(
                                                     chamado.data_agendamento
                                                 )}
@@ -408,6 +619,7 @@ const StaffDashboard = () => {
 
                                             <div className="flex items-center gap-2">
                                                 <Clock3 className="h-4 w-4 shrink-0" />
+
                                                 {formatarHorario(
                                                     chamado.hora_agendamento
                                                 )}
@@ -428,6 +640,27 @@ const StaffDashboard = () => {
                         )}
                     </div>
 
+                    <PaginacaoCompacta
+                        paginaAtual={
+                            paginaProximos
+                        }
+                        totalPaginas={
+                            totalPaginasProximos
+                        }
+                        totalRegistros={
+                            todosProximosChamados.length
+                        }
+                        inicioRegistro={
+                            inicioRegistroProximos
+                        }
+                        fimRegistro={
+                            fimRegistroProximos
+                        }
+                        onChange={
+                            setPaginaProximos
+                        }
+                    />
+
                     <div className="border-t border-border p-4">
                         <Link
                             to="/staff/chamados"
@@ -439,7 +672,7 @@ const StaffDashboard = () => {
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-border bg-card shadow-sm">
+                <section className="flex min-h-[410px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <div className="flex items-center justify-between border-b border-border p-5">
                         <div>
                             <h3 className="font-bold text-foreground">
@@ -454,21 +687,23 @@ const StaffDashboard = () => {
                         <Clock3 className="h-5 w-5 text-amber-600" />
                     </div>
 
-                    <div className="divide-y divide-border">
+                    <div className="flex-1 divide-y divide-border">
                         {loadingChamados ? (
                             <div className="p-6 text-center text-sm text-muted-foreground">
                                 Carregando chamados...
                             </div>
                         ) : aguardandoValidacao.length ===
                           0 ? (
-                            <div className="p-6 text-center text-sm text-muted-foreground">
+                            <div className="flex min-h-[220px] items-center justify-center p-6 text-center text-sm text-muted-foreground">
                                 Nenhum chamado aguardando validação.
                             </div>
                         ) : (
                             aguardandoValidacao.map(
                                 (chamado) => (
                                     <div
-                                        key={chamado.id}
+                                        key={String(
+                                            chamado.id
+                                        )}
                                         className="p-5"
                                     >
                                         <div className="flex items-start justify-between gap-3">
@@ -482,7 +717,8 @@ const StaffDashboard = () => {
 
                                                 <p className="mt-1 truncate text-sm text-muted-foreground">
                                                     {chamado.empresa ||
-                                                        chamado.cliente
+                                                        chamado
+                                                            .cliente
                                                             ?.nome ||
                                                         "Empresa não informada"}
                                                 </p>
@@ -527,6 +763,27 @@ const StaffDashboard = () => {
                             )
                         )}
                     </div>
+
+                    <PaginacaoCompacta
+                        paginaAtual={
+                            paginaValidacao
+                        }
+                        totalPaginas={
+                            totalPaginasValidacao
+                        }
+                        totalRegistros={
+                            todosAguardandoValidacao.length
+                        }
+                        inicioRegistro={
+                            inicioRegistroValidacao
+                        }
+                        fimRegistro={
+                            fimRegistroValidacao
+                        }
+                        onChange={
+                            setPaginaValidacao
+                        }
+                    />
                 </section>
             </div>
         </div>
