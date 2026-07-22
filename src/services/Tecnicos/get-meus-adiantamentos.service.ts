@@ -1,19 +1,41 @@
 import supabase from "../../lib/supabase";
-import {
-    AdiantamentoTecnico,
-    StatusAdiantamento,
-} from "../../types/portal-tecnico.type";
+import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
 import { getTecnicoLogado } from "./get-tecnico-logado.service";
 
-export async function getMeusAdiantamentos(
-    status?: StatusAdiantamento | "todos"
-): Promise<AdiantamentoTecnico[]> {
-    const tecnico = await getTecnicoLogado();
+const obterRelacaoUnica = <T>(
+    valor: T | T[] | null | undefined
+): T | null => {
+    if (Array.isArray(valor)) {
+        return valor[0] ?? null;
+    }
 
-    let query = supabase
+    return valor ?? null;
+};
+
+export async function getMeusAdiantamentos(): Promise<
+    AdiantamentoTecnico[]
+> {
+    const tecnico =
+        await getTecnicoLogado();
+
+    const { data, error } = await supabase
         .from("adiantamento")
         .select(`
-            *,
+            id,
+            tecnico_id,
+            chamado_id,
+            valor,
+            descricao,
+            status,
+            confirmacao_tecnico,
+            observacao_tecnico,
+            comprovante_url,
+            solicitado_em,
+            aprovado_em,
+            pago_em,
+            confirmado_em,
+            criado_em,
+            atualizado_em,
             chamado (
                 id,
                 numero_chamado,
@@ -26,12 +48,6 @@ export async function getMeusAdiantamentos(
             ascending: false,
         });
 
-    if (status && status !== "todos") {
-        query = query.eq("status", status);
-    }
-
-    const { data, error } = await query;
-
     if (error) {
         console.error(
             "Erro ao buscar adiantamentos:",
@@ -41,5 +57,12 @@ export async function getMeusAdiantamentos(
         throw new Error(error.message);
     }
 
-    return (data || []) as AdiantamentoTecnico[];
+    return (data || []).map(
+        (registro: any) => ({
+            ...registro,
+            chamado: obterRelacaoUnica(
+                registro.chamado
+            ),
+        })
+    ) as AdiantamentoTecnico[];
 }

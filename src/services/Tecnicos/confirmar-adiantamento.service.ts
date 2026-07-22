@@ -1,9 +1,5 @@
 import supabase from "../../lib/supabase";
-import {
-    AdiantamentoTecnico,
-    ConfirmacaoAdiantamento,
-} from "../../types/portal-tecnico.type";
-import { getTecnicoLogado } from "./get-tecnico-logado.service";
+import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
 
 interface ConfirmarAdiantamentoParams {
     adiantamentoId: string;
@@ -14,75 +10,36 @@ interface ConfirmarAdiantamentoParams {
 export async function confirmarAdiantamentoTecnico({
     adiantamentoId,
     confirmado,
-    observacao = "",
+    observacao,
 }: ConfirmarAdiantamentoParams): Promise<AdiantamentoTecnico> {
-    const tecnico = await getTecnicoLogado();
-
-    const { data: adiantamento, error: erroBusca } =
-        await supabase
-            .from("adiantamento")
-            .select("*")
-            .eq("id", adiantamentoId)
-            .eq("tecnico_id", tecnico.id)
-            .maybeSingle();
-
-    if (erroBusca) {
-        throw new Error(erroBusca.message);
-    }
-
-    if (!adiantamento) {
+    if (!adiantamentoId) {
         throw new Error(
-            "Adiantamento não encontrado."
+            "Adiantamento não informado."
         );
     }
-
-    if (adiantamento.status !== "pago") {
-        throw new Error(
-            "Somente adiantamentos pagos podem ser confirmados."
-        );
-    }
-
-    const observacaoNormalizada =
-        observacao.trim();
 
     if (
         !confirmado &&
-        !observacaoNormalizada
+        !observacao?.trim()
     ) {
         throw new Error(
             "Informe o motivo da divergência."
         );
     }
 
-    const confirmacao: ConfirmacaoAdiantamento =
-        confirmado
-            ? "confirmado"
-            : "divergente";
-
-    const { data, error } = await supabase
-        .from("adiantamento")
-        .update({
-            confirmacao_tecnico:
-                confirmacao,
-            observacao_tecnico:
-                confirmado
-                    ? null
-                    : observacaoNormalizada,
-            confirmado_tecnico_em:
-                new Date().toISOString(),
-        })
-        .eq("id", adiantamentoId)
-        .eq("tecnico_id", tecnico.id)
-        .select(`
-            *,
-            chamado (
-                id,
-                numero_chamado,
-                empresa,
-                data_agendamento
-            )
-        `)
-        .single();
+    const { data, error } =
+        await supabase.rpc(
+            "confirmar_adiantamento_tecnico",
+            {
+                p_adiantamento_id:
+                    adiantamentoId,
+                p_confirmado:
+                    confirmado,
+                p_observacao:
+                    observacao?.trim() ||
+                    null,
+            }
+        );
 
     if (error) {
         console.error(
