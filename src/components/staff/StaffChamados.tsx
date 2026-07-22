@@ -628,52 +628,81 @@ const StaffChamados = () => {
         };
 
     const handleAvancarStatus =
-        async (
-            chamado: ChamadoTecnicoPortal
-        ) => {
-            const proximaEtapa =
-                obterProximaEtapa(
-                    chamado
-                        .acompanhamento
-                        ?.status_tecnico
-                        ?.codigo
-                );
-
-            if (!proximaEtapa) {
-                return;
-            }
-
-            const chamadoId = String(
-                chamado.id
+    async (
+        chamado: ChamadoTecnicoPortal
+    ) => {
+        const proximaEtapa =
+            obterProximaEtapa(
+                chamado.acompanhamento
+                    ?.status_tecnico
+                    ?.codigo
             );
 
-            try {
-                setProcessandoId(
-                    chamadoId
-                );
+        if (!proximaEtapa) {
+            return;
+        }
 
+        const chamadoId = String(
+            chamado.id
+        );
+
+        try {
+            setProcessandoId(
+                chamadoId
+            );
+
+            const acompanhamentoAtualizado =
                 await atualizarStatusTecnico(
                     chamadoId,
                     proximaEtapa.codigo
                 );
 
-                toast.success(
-                    "Andamento atualizado com sucesso."
-                );
+            setChamados(
+                (chamadosAtuais) =>
+                    chamadosAtuais.map(
+                        (
+                            chamadoAtual
+                        ) =>
+                            String(
+                                chamadoAtual.id
+                            ) ===
+                            chamadoId
+                                ? {
+                                      ...chamadoAtual,
+                                      acompanhamento:
+                                          acompanhamentoAtualizado,
+                                  }
+                                : chamadoAtual
+                    )
+            );
 
-                await carregarChamados(
-                    false
-                );
-            } catch (error) {
-                toast.error(
-                    error instanceof Error
-                        ? error.message
-                        : "Erro ao atualizar andamento."
-                );
-            } finally {
-                setProcessandoId(null);
-            }
-        };
+            setChamadoDetalhes(
+                (chamadoAtual) =>
+                    chamadoAtual &&
+                    String(
+                        chamadoAtual.id
+                    ) === chamadoId
+                        ? {
+                              ...chamadoAtual,
+                              acompanhamento:
+                                  acompanhamentoAtualizado,
+                          }
+                        : chamadoAtual
+            );
+
+            toast.success(
+                "Andamento atualizado com sucesso."
+            );
+        } catch (error) {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Erro ao atualizar andamento."
+            );
+        } finally {
+            setProcessandoId(null);
+        }
+    };
 
     return (
         <div>
@@ -844,17 +873,23 @@ const StaffChamados = () => {
                                                     </h3>
                                                 </div>
 
-                                                <span
-                                                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold ${obterClasseStatusOficial(
-                                                        obterDescricaoStatusOficial(
+                                                <div className="shrink-0 text-right">
+                                                    <p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                        Status oficial
+                                                    </p>
+
+                                                    <span
+                                                        className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${obterClasseStatusOficial(
+                                                            obterDescricaoStatusOficial(
+                                                                chamado
+                                                            )
+                                                        )}`}
+                                                    >
+                                                        {obterDescricaoStatusOficial(
                                                             chamado
-                                                        )
-                                                    )}`}
-                                                >
-                                                    {obterDescricaoStatusOficial(
-                                                        chamado
-                                                    )}
-                                                </span>
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </div>
 
                                             <div className="mt-3 flex min-w-0 items-center gap-2">

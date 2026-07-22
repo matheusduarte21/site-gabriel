@@ -1,125 +1,111 @@
 import supabase from "../../lib/supabase";
 import {
-    AcompanhamentoTecnico,
+    AcompanhamentoTecnicoPortal,
     StatusTecnicoCodigo,
 } from "../../types/portal-tecnico.type";
-import {
-    getOuCriarAcompanhamento,
-    getStatusTecnicoPorCodigo,
-} from "./acompanhamento-tecnico.service";
 
-const obterCampoHorario = (
-    codigo: StatusTecnicoCodigo
-):
-    | "deslocamento_em"
-    | "chegada_em"
-    | "inicio_em"
-    | "finalizacao_em"
-    | null => {
-    if (codigo === "em_deslocamento") {
-        return "deslocamento_em";
-    }
-
-    if (codigo === "chegou_local") {
-        return "chegada_em";
-    }
-
-    if (
-        codigo ===
-        "atendimento_iniciado"
-    ) {
-        return "inicio_em";
-    }
-
-    if (
-        codigo ===
-        "atendimento_finalizado"
-    ) {
-        return "finalizacao_em";
-    }
-
-    return null;
+const CAMPOS_DATA_STATUS: Partial<
+    Record<StatusTecnicoCodigo, string>
+> = {
+    em_deslocamento: "deslocamento_em",
+    chegou_local: "chegada_em",
+    atendimento_iniciado: "inicio_em",
+    atendimento_finalizado: "finalizacao_em",
 };
 
 export async function atualizarStatusTecnico(
     chamadoId: string,
-    novoCodigo: StatusTecnicoCodigo
-): Promise<AcompanhamentoTecnico> {
-    const acompanhamento =
-        await getOuCriarAcompanhamento(
-            chamadoId
-        );
-
-    if (
-        acompanhamento.validacao !==
-        "aprovado"
-    ) {
+    statusCodigo: StatusTecnicoCodigo
+): Promise<AcompanhamentoTecnicoPortal> {
+    if (!chamadoId) {
         throw new Error(
-            "O atendimento deve ser aprovado antes de atualizar o andamento."
+            "Chamado não informado."
         );
     }
 
-    const statusAtual =
-        acompanhamento.status_tecnico;
+    const {
+        data: statusTecnico,
+        error: statusError,
+    } = await supabase
+        .from("status_tecnico")
+        .select(
+            "id, codigo, descricao, ordem, ativo"
+        )
+        .eq("codigo", statusCodigo)
+        .eq("ativo", true)
+        .single();
 
-    if (!statusAtual) {
+    if (statusError) {
+        console.error(
+            "Erro ao buscar status do técnico:",
+            statusError.message
+        );
+
         throw new Error(
-            "O status atual do técnico não foi encontrado."
+            "Status do técnico não encontrado."
         );
     }
 
-    const novoStatus =
-        await getStatusTecnicoPorCodigo(
-            novoCodigo
-        );
+    const agora =
+        new Date().toISOString();
 
-    if (
-        novoStatus.ordem !==
-        statusAtual.ordem + 1
-    ) {
-        throw new Error(
-            "O andamento deve seguir a ordem correta das etapas."
-        );
-    }
-
-    const agora = new Date().toISOString();
-
-    const atualizacao: Record<
+    const dadosAtualizacao: Record<
         string,
         string | number
     > = {
         status_tecnico_id:
-            novoStatus.id,
+            statusTecnico.id,
         status_atualizado_em: agora,
+        atualizado_em: agora,
     };
 
-    const campoHorario =
-        obterCampoHorario(novoCodigo);
+    const campoData =
+        CAMPOS_DATA_STATUS[
+            statusCodigo
+        ];
 
-    if (campoHorario) {
-        atualizacao[campoHorario] = agora;
+    if (campoData) {
+        dadosAtualizacao[campoData] =
+            agora;
     }
 
-    const { data, error } = await supabase
+    const {
+        data: acompanhamento,
+        error: updateError,
+    } = await supabase
         .from(
             "chamado_acompanhamento_tecnico"
         )
-        .update(atualizacao)
-        .eq("id", acompanhamento.id)
+        .update(dadosAtualizacao)
+        .eq("chamado_id", chamadoId)
         .select(`
             *,
-            status_tecnico (*)
+            status_tecnico (
+                id,
+                codigo,
+                descricao,
+                ordem,
+                ativo
+            )
         `)
         .single();
 
-    if (error) {
+    if (updateError) {
         console.error(
             "Erro ao atualizar status do técnico:",
-            error.message
+            updateError.message
         );
 
-        throw new Error(error.message);
+        throw new Error(
+            updateError.message
+        );
     }
 
-    return data as AcompanhamentoTecnico;
+    if (!acompanhamento) {
+        throw new Error(
+            "Acompanhamento do chamado não encontrado."
+        );
+    }
+
+    return acompanhamento as AcompanhamentoTecnicoPortal;
 }

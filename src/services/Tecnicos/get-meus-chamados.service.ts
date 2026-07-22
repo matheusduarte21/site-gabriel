@@ -1,38 +1,71 @@
 import supabase from "../../lib/supabase";
 import {
+    AcompanhamentoTecnicoPortal,
     ChamadoTecnicoPortal,
     FiltroChamadosTecnico,
 } from "../../types/portal-tecnico.type";
 import { getTecnicoLogado } from "./get-tecnico-logado.service";
 
-const obterMesReferencia = (
-    dataAgendamento?: string | null,
-    dataCriacao?: string | null
-): string | null => {
-    const data =
-        dataAgendamento ||
-        dataCriacao ||
-        null;
+interface ChamadoTecnicoResposta
+    extends Omit<
+        ChamadoTecnicoPortal,
+        "acompanhamento"
+    > {
+    acompanhamento?:
+        | AcompanhamentoTecnicoPortal
+        | AcompanhamentoTecnicoPortal[]
+        | null;
+}
 
-    if (!data) {
+const obterTimestampAcompanhamento = (
+    acompanhamento:
+        AcompanhamentoTecnicoPortal
+): number => {
+    const valor =
+        acompanhamento.status_atualizado_em ||
+        acompanhamento.atualizado_em ||
+        acompanhamento.criado_em;
+
+    if (!valor) {
+        return 0;
+    }
+
+    const timestamp =
+        new Date(valor).getTime();
+
+    return Number.isNaN(timestamp)
+        ? 0
+        : timestamp;
+};
+
+const obterAcompanhamentoMaisRecente = (
+    valor:
+        | AcompanhamentoTecnicoPortal
+        | AcompanhamentoTecnicoPortal[]
+        | null
+        | undefined
+): AcompanhamentoTecnicoPortal | null => {
+    if (!valor) {
         return null;
     }
 
-    const mes = data.slice(0, 7);
-
-    return /^\d{4}-\d{2}$/.test(mes)
-        ? mes
-        : null;
-};
-
-const obterRelacaoUnica = <T>(
-    valor: T | T[] | null | undefined
-): T | null => {
-    if (Array.isArray(valor)) {
-        return valor[0] ?? null;
+    if (!Array.isArray(valor)) {
+        return valor;
     }
 
-    return valor ?? null;
+    if (valor.length === 0) {
+        return null;
+    }
+
+    return [...valor].sort(
+        (a, b) =>
+            obterTimestampAcompanhamento(
+                b
+            ) -
+            obterTimestampAcompanhamento(
+                a
+            )
+    )[0];
 };
 
 export async function getMeusChamados(
@@ -55,32 +88,20 @@ export async function getMeusChamados(
             ),
             tecnico (
                 id,
-                usuario_id,
                 nome,
                 telefone,
                 endereco,
                 cpf,
                 rg,
-                data_nascimento,
                 email_contato,
-                data_criacao,
+                data_nascimento,
                 estado_id,
-                municipio_id
+                municipio_id,
+                usuario_id,
+                data_criacao
             ),
             acompanhamento:chamado_acompanhamento_tecnico (
-                id,
-                chamado_id,
-                status_tecnico_id,
-                validacao,
-                observacao_validacao,
-                validado_em,
-                status_atualizado_em,
-                deslocamento_em,
-                chegada_em,
-                inicio_em,
-                finalizacao_em,
-                criado_em,
-                atualizado_em,
+                *,
                 status_tecnico (
                     id,
                     codigo,
@@ -90,7 +111,50 @@ export async function getMeusChamados(
                 )
             )
         `)
-        .eq("tecnico_id", tecnico.id)
+        .eq(
+            "tecnico_id",
+            tecnico.id
+        );
+
+    if (
+        filtros.statusId !==
+            undefined &&
+        filtros.statusId !== null &&
+        filtros.statusId !== ""
+    ) {
+        query = query.eq(
+            "status_id",
+            filtros.statusId
+        );
+    }
+
+    if (
+        filtros.status_id !==
+            undefined &&
+        filtros.status_id !== null &&
+        filtros.status_id !== ""
+    ) {
+        query = query.eq(
+            "status_id",
+            filtros.status_id
+        );
+    }
+
+    if (filtros.dataInicio) {
+        query = query.gte(
+            "data_agendamento",
+            filtros.dataInicio
+        );
+    }
+
+    if (filtros.dataFim) {
+        query = query.lte(
+            "data_agendamento",
+            filtros.dataFim
+        );
+    }
+
+    query = query
         .order("data_agendamento", {
             ascending: true,
             nullsFirst: false,
@@ -99,17 +163,8 @@ export async function getMeusChamados(
             ascending: false,
         });
 
-    if (
-        filtros.statusOficialId &&
-        filtros.statusOficialId !== "todos"
-    ) {
-        query = query.eq(
-            "status_id",
-            filtros.statusOficialId
-        );
-    }
-
-    const { data, error } = await query;
+    const { data, error } =
+        await query;
 
     if (error) {
         console.error(
@@ -120,43 +175,21 @@ export async function getMeusChamados(
         throw new Error(error.message);
     }
 
-    let chamados = (data ?? []).map(
-        (registro: any): ChamadoTecnicoPortal => ({
-            ...registro,
-            cliente: obterRelacaoUnica(
-                registro.cliente
-            ),
-            status: obterRelacaoUnica(
-                registro.status
-            ),
-            tecnico: obterRelacaoUnica(
-                registro.tecnico
-            ),
+    let chamados = (
+        data || []
+    ).map(
+        (
+            chamado: ChamadoTecnicoResposta
+        ): ChamadoTecnicoPortal => ({
+            ...chamado,
             acompanhamento:
-                obterRelacaoUnica(
-                    registro.acompanhamento
+                obterAcompanhamentoMaisRecente(
+                    chamado.acompanhamento
                 ),
-            adiantamentos: [],
         })
     );
 
-    if (
-        filtros.mes &&
-        filtros.mes !== "todos"
-    ) {
-        chamados = chamados.filter(
-            (chamado) =>
-                obterMesReferencia(
-                    chamado.data_agendamento,
-                    chamado.data_criacao
-                ) === filtros.mes
-        );
-    }
-
-    if (
-        filtros.validacao &&
-        filtros.validacao !== "todos"
-    ) {
+    if (filtros.validacao) {
         chamados = chamados.filter(
             (chamado) =>
                 chamado.acompanhamento
@@ -165,16 +198,61 @@ export async function getMeusChamados(
         );
     }
 
-    if (
-        filtros.statusTecnico &&
-        filtros.statusTecnico !== "todos"
-    ) {
+    const statusTecnicoFiltro =
+        filtros.statusTecnico ||
+        filtros.status_tecnico;
+
+    if (statusTecnicoFiltro) {
         chamados = chamados.filter(
             (chamado) =>
                 chamado.acompanhamento
                     ?.status_tecnico
                     ?.codigo ===
-                filtros.statusTecnico
+                statusTecnicoFiltro
+        );
+    }
+
+    if (filtros.busca?.trim()) {
+        const termo =
+            filtros.busca
+                .trim()
+                .toLocaleLowerCase(
+                    "pt-BR"
+                );
+
+        chamados = chamados.filter(
+            (chamado) => {
+                const numero =
+                    chamado.numero_chamado
+                        ?.toLocaleLowerCase(
+                            "pt-BR"
+                        ) || "";
+
+                const empresa =
+                    chamado.empresa
+                        ?.toLocaleLowerCase(
+                            "pt-BR"
+                        ) || "";
+
+                const cliente =
+                    chamado.cliente?.nome
+                        ?.toLocaleLowerCase(
+                            "pt-BR"
+                        ) || "";
+
+                const endereco =
+                    chamado.endereco
+                        ?.toLocaleLowerCase(
+                            "pt-BR"
+                        ) || "";
+
+                return (
+                    numero.includes(termo) ||
+                    empresa.includes(termo) ||
+                    cliente.includes(termo) ||
+                    endereco.includes(termo)
+                );
+            }
         );
     }
 

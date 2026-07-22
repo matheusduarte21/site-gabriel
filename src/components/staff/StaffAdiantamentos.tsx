@@ -8,6 +8,8 @@ import {
     AlertCircle,
     Banknote,
     CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
     Clock3,
     ExternalLink,
     Loader2,
@@ -35,6 +37,17 @@ interface CardResumoProps {
     icon: ReactNode;
     className: string;
 }
+
+interface PaginacaoProps {
+    paginaAtual: number;
+    totalPaginas: number;
+    totalRegistros: number;
+    inicioRegistro: number;
+    fimRegistro: number;
+    onChange: (pagina: number) => void;
+}
+
+const ITENS_POR_PAGINA = 5;
 
 const CardResumo = ({
     titulo,
@@ -65,25 +78,168 @@ const CardResumo = ({
     );
 };
 
+const Paginacao = ({
+    paginaAtual,
+    totalPaginas,
+    totalRegistros,
+    inicioRegistro,
+    fimRegistro,
+    onChange,
+}: PaginacaoProps) => {
+    if (
+        totalRegistros === 0 ||
+        totalPaginas <= 1
+    ) {
+        return null;
+    }
+
+    const paginasVisiveis = Array.from(
+        {
+            length: totalPaginas,
+        },
+        (_, index) => index + 1
+    ).filter((pagina) => {
+        if (totalPaginas <= 5) {
+            return true;
+        }
+
+        if (
+            pagina === 1 ||
+            pagina === totalPaginas
+        ) {
+            return true;
+        }
+
+        return (
+            pagina >= paginaAtual - 1 &&
+            pagina <= paginaAtual + 1
+        );
+    });
+
+    return (
+        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+                Mostrando{" "}
+                <span className="font-bold text-foreground">
+                    {inicioRegistro}
+                </span>{" "}
+                até{" "}
+                <span className="font-bold text-foreground">
+                    {fimRegistro}
+                </span>{" "}
+                de{" "}
+                <span className="font-bold text-foreground">
+                    {totalRegistros}
+                </span>{" "}
+                adiantamentos
+            </p>
+
+            <div className="flex items-center justify-center gap-1">
+                <button
+                    type="button"
+                    onClick={() =>
+                        onChange(
+                            paginaAtual - 1
+                        )
+                    }
+                    disabled={paginaAtual === 1}
+                    aria-label="Página anterior"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {paginasVisiveis.map(
+                    (pagina, index) => {
+                        const paginaAnterior =
+                            paginasVisiveis[
+                                index - 1
+                            ];
+
+                        const exibirSeparador =
+                            paginaAnterior &&
+                            pagina -
+                                paginaAnterior >
+                                1;
+
+                        return (
+                            <div
+                                key={pagina}
+                                className="flex items-center gap-1"
+                            >
+                                {exibirSeparador && (
+                                    <span className="px-1 text-xs text-muted-foreground">
+                                        ...
+                                    </span>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        onChange(
+                                            pagina
+                                        )
+                                    }
+                                    aria-current={
+                                        pagina ===
+                                        paginaAtual
+                                            ? "page"
+                                            : undefined
+                                    }
+                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-bold transition-colors ${
+                                        pagina ===
+                                        paginaAtual
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : "border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    }`}
+                                >
+                                    {pagina}
+                                </button>
+                            </div>
+                        );
+                    }
+                )}
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        onChange(
+                            paginaAtual + 1
+                        )
+                    }
+                    disabled={
+                        paginaAtual ===
+                        totalPaginas
+                    }
+                    aria-label="Próxima página"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const obterClasseStatus = (
     status: StatusAdiantamento
 ): string => {
     if (status === "pago") {
-        return "border-emerald-200 bg-emerald-50 text-emerald-700";
+        return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300";
     }
 
     if (status === "aprovado") {
-        return "border-blue-200 bg-blue-50 text-blue-700";
+        return "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300";
     }
 
     if (
         status === "reprovado" ||
         status === "cancelado"
     ) {
-        return "border-red-200 bg-red-50 text-red-700";
+        return "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300";
     }
 
-    return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
 };
 
 const StaffAdiantamentos = () => {
@@ -112,6 +268,11 @@ const StaffAdiantamentos = () => {
         observacaoDivergencia,
         setObservacaoDivergencia,
     ] = useState("");
+
+    const [
+        paginaAtual,
+        setPaginaAtual,
+    ] = useState(1);
 
     const carregarAdiantamentos =
         async () => {
@@ -180,6 +341,74 @@ const StaffAdiantamentos = () => {
         );
     }, [adiantamentos]);
 
+    const totalPaginas = Math.max(
+        1,
+        Math.ceil(
+            adiantamentos.length /
+                ITENS_POR_PAGINA
+        )
+    );
+
+    useEffect(() => {
+        if (
+            paginaAtual > totalPaginas
+        ) {
+            setPaginaAtual(
+                totalPaginas
+            );
+        }
+    }, [
+        paginaAtual,
+        totalPaginas,
+    ]);
+
+    const adiantamentosPaginados =
+        useMemo(() => {
+            const inicio =
+                (paginaAtual - 1) *
+                ITENS_POR_PAGINA;
+
+            return adiantamentos.slice(
+                inicio,
+                inicio +
+                    ITENS_POR_PAGINA
+            );
+        }, [
+            adiantamentos,
+            paginaAtual,
+        ]);
+
+    const inicioRegistro =
+        adiantamentos.length === 0
+            ? 0
+            : (paginaAtual - 1) *
+                  ITENS_POR_PAGINA +
+              1;
+
+    const fimRegistro = Math.min(
+        paginaAtual *
+            ITENS_POR_PAGINA,
+        adiantamentos.length
+    );
+
+    const handleAlterarPagina = (
+        pagina: number
+    ) => {
+        if (
+            pagina < 1 ||
+            pagina > totalPaginas
+        ) {
+            return;
+        }
+
+        setPaginaAtual(pagina);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    };
+
     const handleConfirmar = async (
         adiantamentoId: string
     ) => {
@@ -220,6 +449,7 @@ const StaffAdiantamentos = () => {
             toast.error(
                 "Informe o motivo da divergência."
             );
+
             return;
         }
 
@@ -276,6 +506,7 @@ const StaffAdiantamentos = () => {
                                     : ""
                             }`}
                         />
+
                         Atualizar
                     </button>
                 }
@@ -290,7 +521,7 @@ const StaffAdiantamentos = () => {
                     icon={
                         <Wallet className="h-5 w-5" />
                     }
-                    className="bg-blue-50 text-blue-700"
+                    className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
                 />
 
                 <CardResumo
@@ -301,7 +532,7 @@ const StaffAdiantamentos = () => {
                     icon={
                         <Banknote className="h-5 w-5" />
                     }
-                    className="bg-emerald-50 text-emerald-700"
+                    className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                 />
 
                 <CardResumo
@@ -312,7 +543,7 @@ const StaffAdiantamentos = () => {
                     icon={
                         <Clock3 className="h-5 w-5" />
                     }
-                    className="bg-amber-50 text-amber-700"
+                    className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                 />
 
                 <CardResumo
@@ -323,13 +554,14 @@ const StaffAdiantamentos = () => {
                     icon={
                         <CheckCircle2 className="h-5 w-5" />
                     }
-                    className="bg-indigo-50 text-indigo-700"
+                    className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
                 />
             </section>
 
             {erro && (
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                     <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+
                     {erro}
                 </div>
             )}
@@ -349,7 +581,7 @@ const StaffAdiantamentos = () => {
                         </h3>
                     </div>
                 ) : (
-                    adiantamentos.map(
+                    adiantamentosPaginados.map(
                         (adiantamento) => {
                             const podeConfirmar =
                                 adiantamento.status ===
@@ -449,6 +681,7 @@ const StaffAdiantamentos = () => {
                                             className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
                                         >
                                             <ExternalLink className="h-4 w-4" />
+
                                             Ver comprovante
                                         </a>
                                     )}
@@ -472,6 +705,7 @@ const StaffAdiantamentos = () => {
                                                 ) : (
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 )}
+
                                                 Confirmar recebimento
                                             </button>
 
@@ -489,7 +723,7 @@ const StaffAdiantamentos = () => {
                                                 disabled={
                                                     processando
                                                 }
-                                                className="h-11 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                className="h-11 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
                                             >
                                                 Informar divergência
                                             </button>
@@ -501,6 +735,21 @@ const StaffAdiantamentos = () => {
                     )
                 )}
             </section>
+
+            <Paginacao
+                paginaAtual={paginaAtual}
+                totalPaginas={totalPaginas}
+                totalRegistros={
+                    adiantamentos.length
+                }
+                inicioRegistro={
+                    inicioRegistro
+                }
+                fimRegistro={fimRegistro}
+                onChange={
+                    handleAlterarPagina
+                }
+            />
 
             {divergenciaId && (
                 <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
@@ -581,6 +830,7 @@ const StaffAdiantamentos = () => {
                                 ) : (
                                     <AlertCircle className="h-4 w-4" />
                                 )}
+
                                 Registrar
                             </button>
                         </div>

@@ -4,7 +4,7 @@ export type ValidacaoAtendimentoTecnico =
     | "reprovado";
 
 export type StatusTecnicoCodigo =
-    | "aguardando_inicio"
+    | "aguardando"
     | "em_deslocamento"
     | "chegou_local"
     | "atendimento_iniciado"
@@ -14,16 +14,24 @@ export interface StatusTecnicoPortal {
     id: number;
     codigo: StatusTecnicoCodigo;
     descricao: string;
+    ordem?: number | null;
+    ativo?: boolean | null;
+    criado_em?: string | null;
 }
 
 export interface AcompanhamentoTecnicoPortal {
-    id?: string;
+    id: string;
     chamado_id: string;
-    tecnico_id: string;
+    tecnico_id?: string | null;
     status_tecnico_id?: number | null;
     validacao: ValidacaoAtendimentoTecnico;
     observacao_validacao?: string | null;
     validado_em?: string | null;
+    status_atualizado_em?: string | null;
+    deslocamento_em?: string | null;
+    chegada_em?: string | null;
+    inicio_em?: string | null;
+    finalizacao_em?: string | null;
     criado_em?: string | null;
     atualizado_em?: string | null;
     status_tecnico?: StatusTecnicoPortal | null;
@@ -41,7 +49,17 @@ export interface StatusChamadoPortal {
 
 export interface TecnicoResumoPortal {
     id: string;
+    usuario_id?: string | null;
     nome: string;
+    telefone?: string | null;
+    endereco?: string | null;
+    cpf?: string | null;
+    rg?: string | null;
+    email_contato?: string | null;
+    data_nascimento?: string | null;
+    estado_id?: number | null;
+    municipio_id?: number | null;
+    data_criacao?: string | null;
 }
 
 export interface ChamadoTecnicoPortal {
@@ -105,6 +123,7 @@ export interface TecnicoLogado {
     estado_id?: number | null;
     municipio_id?: number | null;
     criado_em?: string | null;
+    data_criacao?: string | null;
     municipio?: {
         id?: number;
         nome: string;
