@@ -28,6 +28,7 @@ import { AuthProvider } from "./context/AuthContext";
 import BibliotecaVideos from "./components/admin/BibliotecaVideos/BibliotecaVideos";
 import Chamados from "./components/admin/ChamadosTemp.";
 import Login from "./components/auth/Login";
+import AdiantamentosAdmin from "./components/admin/adiantamento/AdiantamentosAdmin";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -128,6 +129,11 @@ function App() {
                         <Route
                             path="chamados"
                             element={<Chamados />}
+                        />
+
+                        <Route
+                            path="adiantamentos"
+                            element={<AdiantamentosAdmin />}
                         />
 
                         <Route

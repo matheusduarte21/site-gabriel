@@ -12,6 +12,7 @@ import {
     GraduationCap,
     LayoutDashboard,
     Loader2,
+    HandCoins,
     LogOut,
     Moon,
     Settings,
@@ -46,6 +47,11 @@ const navItems = [
         to: "/admin/chamados",
         icon: ClipboardList,
         label: "Chamados",
+    },
+    {
+        to: "/admin/adiantamentos",
+        icon: HandCoins,
+        label: "Adiantamentos",
     },
     {
         to: "/admin/usuarios",

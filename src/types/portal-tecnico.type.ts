@@ -142,10 +142,31 @@ export type StatusAdiantamento =
     | "pago"
     | "cancelado";
 
-export type ConfirmacaoAdiantamentoTecnico =
+export type ConfirmacaoTecnicoAdiantamento =
     | "pendente"
     | "confirmado"
     | "divergencia";
+
+export type ValidacaoValorAdiantamentoTecnico =
+    | "pendente"
+    | "aprovado"
+    | "reprovado";
+
+export type StatusPagamentoAdiantamentoTecnico =
+    | "pendente"
+    | "pago"
+    | "cancelado";
+
+export type ConfirmacaoRecebimentoAdiantamentoTecnico =
+    | "pendente"
+    | "confirmado"
+    | "divergencia";
+
+export type StatusCompensacaoAdiantamentoTecnico =
+    | "pendente"
+    | "disponivel"
+    | "parcial"
+    | "compensado";
 
 export interface AdiantamentoChamado {
     id: string;
@@ -160,8 +181,8 @@ export interface AdiantamentoTecnico {
     chamado_id?: string | null;
     valor: number | string;
     descricao: string;
-    status: StatusAdiantamento;
-    confirmacao_tecnico: ConfirmacaoAdiantamentoTecnico;
+    status?: StatusAdiantamento | null;
+    confirmacao_tecnico?: ConfirmacaoTecnicoAdiantamento | null;
     observacao_tecnico?: string | null;
     comprovante_url?: string | null;
     solicitado_em?: string | null;
@@ -170,5 +191,18 @@ export interface AdiantamentoTecnico {
     confirmado_em?: string | null;
     criado_em?: string | null;
     atualizado_em?: string | null;
+    validacao_valor_tecnico: ValidacaoValorAdiantamentoTecnico;
+    observacao_validacao?: string | null;
+    enviado_validacao_em?: string | null;
+    validado_em?: string | null;
+    status_pagamento: StatusPagamentoAdiantamentoTecnico;
+    confirmacao_recebimento: ConfirmacaoRecebimentoAdiantamentoTecnico;
+    observacao_recebimento?: string | null;
+    recebimento_respondido_em?: string | null;
+    status_compensacao: StatusCompensacaoAdiantamentoTecnico;
+    valor_compensado: number | string;
+    compensado_em?: string | null;
+    cancelado_em?: string | null;
+    motivo_cancelamento?: string | null;
     chamado?: AdiantamentoChamado | null;
 }

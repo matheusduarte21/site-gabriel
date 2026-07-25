@@ -1,28 +1,33 @@
 import {
-    ReactNode,
+    useCallback,
     useEffect,
     useMemo,
     useState,
 } from "react";
+import type { ReactNode } from "react";
 import {
     AlertCircle,
     Banknote,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
+    CircleDollarSign,
     Clock3,
     ExternalLink,
+    FileCheck2,
     Loader2,
     RefreshCw,
+    ShieldCheck,
+    ThumbsDown,
+    ThumbsUp,
+    Triangle,
     Wallet,
     X,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-    AdiantamentoTecnico,
-    StatusAdiantamento,
-} from "../../types/portal-tecnico.type";
+import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
 import { getMeusAdiantamentos } from "../../services/Tecnicos/get-meus-adiantamentos.service";
+import { responderValorAdiantamentoTecnico } from "../../services/Tecnicos/responder-valor-adiantamento.service";
 import { confirmarAdiantamentoTecnico } from "../../services/Tecnicos/confirmar-adiantamento.service";
 import StaffHeader from "./StaffHeader";
 import {
@@ -34,6 +39,7 @@ import {
 interface CardResumoProps {
     titulo: string;
     valor: string;
+    descricao: string;
     icon: ReactNode;
     className: string;
 }
@@ -47,18 +53,26 @@ interface PaginacaoProps {
     onChange: (pagina: number) => void;
 }
 
+interface ModalObservacao {
+    adiantamentoId: string;
+    tipo:
+        | "reprovar_valor"
+        | "divergencia_recebimento";
+}
+
 const ITENS_POR_PAGINA = 5;
 
 const CardResumo = ({
     titulo,
     valor,
+    descricao,
     icon,
     className,
 }: CardResumoProps) => {
     return (
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-                <div>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                     <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                         {titulo}
                     </p>
@@ -66,10 +80,14 @@ const CardResumo = ({
                     <p className="mt-2 text-xl font-bold text-foreground">
                         {valor}
                     </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {descricao}
+                    </p>
                 </div>
 
                 <span
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${className}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${className}`}
                 >
                     {icon}
                 </span>
@@ -144,30 +162,28 @@ const Paginacao = ({
                     }
                     disabled={paginaAtual === 1}
                     aria-label="Página anterior"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     <ChevronLeft className="h-4 w-4" />
                 </button>
 
                 {paginasVisiveis.map(
                     (pagina, index) => {
-                        const paginaAnterior =
+                        const anterior =
                             paginasVisiveis[
                                 index - 1
                             ];
 
-                        const exibirSeparador =
-                            paginaAnterior &&
-                            pagina -
-                                paginaAnterior >
-                                1;
+                        const separador =
+                            anterior &&
+                            pagina - anterior > 1;
 
                         return (
                             <div
                                 key={pagina}
                                 className="flex items-center gap-1"
                             >
-                                {exibirSeparador && (
+                                {separador && (
                                     <span className="px-1 text-xs text-muted-foreground">
                                         ...
                                     </span>
@@ -180,17 +196,11 @@ const Paginacao = ({
                                             pagina
                                         )
                                     }
-                                    aria-current={
+                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-bold ${
                                         pagina ===
                                         paginaAtual
-                                            ? "page"
-                                            : undefined
-                                    }
-                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-bold transition-colors ${
-                                        pagina ===
-                                        paginaAtual
-                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                            : "border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "border border-border bg-background text-muted-foreground hover:bg-secondary"
                                     }`}
                                 >
                                     {pagina}
@@ -212,7 +222,7 @@ const Paginacao = ({
                         totalPaginas
                     }
                     aria-label="Próxima página"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     <ChevronRight className="h-4 w-4" />
                 </button>
@@ -222,24 +232,149 @@ const Paginacao = ({
 };
 
 const obterClasseStatus = (
-    status: StatusAdiantamento
+    valor: string
 ): string => {
-    if (status === "pago") {
+    if (
+        [
+            "aprovado",
+            "pago",
+            "confirmado",
+            "disponivel",
+            "compensado",
+        ].includes(valor)
+    ) {
         return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300";
     }
 
-    if (status === "aprovado") {
-        return "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300";
-    }
-
     if (
-        status === "reprovado" ||
-        status === "cancelado"
+        [
+            "reprovado",
+            "divergencia",
+            "cancelado",
+        ].includes(valor)
     ) {
         return "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300";
     }
 
+    if (valor === "parcial") {
+        return "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300";
+    }
+
     return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
+};
+
+const formatarStatus = (
+    valor: string
+): string => {
+    return valor
+        .replace("_", " ")
+        .replace(/\b\w/g, (letra) =>
+            letra.toUpperCase()
+        );
+};
+
+const obterEtapaAtual = (
+    adiantamento: AdiantamentoTecnico
+) => {
+    if (
+        adiantamento.status_pagamento ===
+        "cancelado"
+    ) {
+        return {
+            label: "Cancelado",
+            className:
+                "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+        };
+    }
+
+    if (
+        adiantamento.validacao_valor_tecnico ===
+        "pendente"
+    ) {
+        return {
+            label:
+                "Aguardando sua validação",
+            className:
+                "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+        };
+    }
+
+    if (
+        adiantamento.validacao_valor_tecnico ===
+        "reprovado"
+    ) {
+        return {
+            label: "Valor reprovado",
+            className:
+                "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300",
+        };
+    }
+
+    if (
+        adiantamento.status_pagamento ===
+        "pendente"
+    ) {
+        return {
+            label:
+                "Aguardando pagamento",
+            className:
+                "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300",
+        };
+    }
+
+    if (
+        adiantamento.confirmacao_recebimento ===
+        "pendente"
+    ) {
+        return {
+            label:
+                "Confirme o recebimento",
+            className:
+                "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300",
+        };
+    }
+
+    if (
+        adiantamento.confirmacao_recebimento ===
+        "divergencia"
+    ) {
+        return {
+            label:
+                "Divergência informada",
+            className:
+                "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300",
+        };
+    }
+
+    if (
+        adiantamento.status_compensacao ===
+        "compensado"
+    ) {
+        return {
+            label: "Compensado",
+            className:
+                "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+        };
+    }
+
+    if (
+        adiantamento.status_compensacao ===
+        "parcial"
+    ) {
+        return {
+            label:
+                "Compensado parcialmente",
+            className:
+                "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300",
+        };
+    }
+
+    return {
+        label:
+            "Disponível para compensação",
+        className:
+            "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+    };
 };
 
 const StaffAdiantamentos = () => {
@@ -260,13 +395,15 @@ const StaffAdiantamentos = () => {
     ] = useState<string | null>(null);
 
     const [
-        divergenciaId,
-        setDivergenciaId,
-    ] = useState<string | null>(null);
+        modalObservacao,
+        setModalObservacao,
+    ] = useState<ModalObservacao | null>(
+        null
+    );
 
     const [
-        observacaoDivergencia,
-        setObservacaoDivergencia,
+        observacao,
+        setObservacao,
     ] = useState("");
 
     const [
@@ -275,33 +412,50 @@ const StaffAdiantamentos = () => {
     ] = useState(1);
 
     const carregarAdiantamentos =
-        async () => {
-            try {
-                setLoading(true);
-                setErro(null);
+        useCallback(
+            async (
+                exibirLoading = true
+            ) => {
+                try {
+                    if (exibirLoading) {
+                        setLoading(true);
+                    }
 
-                const dados =
-                    await getMeusAdiantamentos();
+                    setErro(null);
 
-                setAdiantamentos(dados);
-            } catch (error) {
-                setErro(
-                    error instanceof Error
-                        ? error.message
-                        : "Erro ao carregar adiantamentos."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+                    const dados =
+                        await getMeusAdiantamentos();
+
+                    setAdiantamentos(dados);
+                } catch (error) {
+                    setErro(
+                        error instanceof Error
+                            ? error.message
+                            : "Erro ao carregar adiantamentos."
+                    );
+                } finally {
+                    if (exibirLoading) {
+                        setLoading(false);
+                    }
+                }
+            },
+            []
+        );
 
     useEffect(() => {
         void carregarAdiantamentos();
-    }, []);
+    }, [carregarAdiantamentos]);
 
     const resumo = useMemo(() => {
         return adiantamentos.reduce(
             (acumulado, item) => {
+                if (
+                    item.status_pagamento ===
+                    "cancelado"
+                ) {
+                    return acumulado;
+                }
+
                 const valor =
                     converterNumero(
                         item.valor
@@ -310,33 +464,56 @@ const StaffAdiantamentos = () => {
                 acumulado.total += valor;
 
                 if (
-                    item.status === "pago"
+                    item.validacao_valor_tecnico ===
+                    "pendente"
                 ) {
-                    acumulado.pago += valor;
-                }
-
-                if (
-                    item.status === "pendente"
-                ) {
-                    acumulado.pendente +=
+                    acumulado.validar +=
                         valor;
                 }
 
                 if (
-                    item.confirmacao_tecnico ===
-                    "confirmado"
+                    item.validacao_valor_tecnico ===
+                        "aprovado" &&
+                    item.status_pagamento ===
+                        "pendente"
                 ) {
-                    acumulado.confirmado +=
+                    acumulado.pagar += valor;
+                }
+
+                if (
+                    item.status_pagamento ===
+                        "pago" &&
+                    item.confirmacao_recebimento ===
+                        "pendente"
+                ) {
+                    acumulado.confirmar +=
                         valor;
+                }
+
+                if (
+                    item.status_compensacao ===
+                        "disponivel" ||
+                    item.status_compensacao ===
+                        "parcial"
+                ) {
+                    acumulado.compensar +=
+                        Math.max(
+                            0,
+                            valor -
+                                converterNumero(
+                                    item.valor_compensado
+                                )
+                        );
                 }
 
                 return acumulado;
             },
             {
                 total: 0,
-                pago: 0,
-                pendente: 0,
-                confirmado: 0,
+                validar: 0,
+                pagar: 0,
+                confirmar: 0,
+                compensar: 0,
             }
         );
     }, [adiantamentos]);
@@ -409,87 +586,169 @@ const StaffAdiantamentos = () => {
         });
     };
 
-    const handleConfirmar = async (
-        adiantamentoId: string
+    const handleAprovarValor =
+        async (
+            adiantamentoId: string
+        ) => {
+            try {
+                setProcessandoId(
+                    adiantamentoId
+                );
+
+                await responderValorAdiantamentoTecnico(
+                    {
+                        adiantamentoId,
+                        aprovado: true,
+                    }
+                );
+
+                toast.success(
+                    "Valor aprovado com sucesso."
+                );
+
+                await carregarAdiantamentos(
+                    false
+                );
+            } catch (error) {
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "Erro ao aprovar o valor."
+                );
+            } finally {
+                setProcessandoId(null);
+            }
+        };
+
+    const handleConfirmarRecebimento =
+        async (
+            adiantamentoId: string
+        ) => {
+            try {
+                setProcessandoId(
+                    adiantamentoId
+                );
+
+                await confirmarAdiantamentoTecnico(
+                    {
+                        adiantamentoId,
+                        confirmado: true,
+                    }
+                );
+
+                toast.success(
+                    "Recebimento confirmado com sucesso."
+                );
+
+                await carregarAdiantamentos(
+                    false
+                );
+            } catch (error) {
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "Erro ao confirmar o recebimento."
+                );
+            } finally {
+                setProcessandoId(null);
+            }
+        };
+
+    const abrirModalObservacao = (
+        adiantamentoId: string,
+        tipo: ModalObservacao["tipo"]
     ) => {
-        try {
-            setProcessandoId(
-                adiantamentoId
-            );
+        setModalObservacao({
+            adiantamentoId,
+            tipo,
+        });
 
-            await confirmarAdiantamentoTecnico({
-                adiantamentoId,
-                confirmado: true,
-            });
-
-            toast.success(
-                "Recebimento confirmado."
-            );
-
-            await carregarAdiantamentos();
-        } catch (error) {
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Erro ao confirmar adiantamento."
-            );
-        } finally {
-            setProcessandoId(null);
-        }
+        setObservacao("");
     };
 
-    const handleDivergencia = async () => {
-        if (!divergenciaId) {
-            return;
-        }
+    const fecharModalObservacao =
+        () => {
+            setModalObservacao(null);
+            setObservacao("");
+        };
 
-        if (
-            !observacaoDivergencia.trim()
-        ) {
-            toast.error(
-                "Informe o motivo da divergência."
-            );
+    const handleEnviarObservacao =
+        async () => {
+            if (!modalObservacao) {
+                return;
+            }
 
-            return;
-        }
+            if (
+                observacao.trim().length <
+                3
+            ) {
+                toast.error(
+                    modalObservacao.tipo ===
+                        "reprovar_valor"
+                        ? "Informe o motivo da reprovação."
+                        : "Informe o motivo da divergência."
+                );
 
-        try {
-            setProcessandoId(
-                divergenciaId
-            );
+                return;
+            }
 
-            await confirmarAdiantamentoTecnico({
-                adiantamentoId:
-                    divergenciaId,
-                confirmado: false,
-                observacao:
-                    observacaoDivergencia,
-            });
+            try {
+                setProcessandoId(
+                    modalObservacao.adiantamentoId
+                );
 
-            toast.success(
-                "Divergência registrada."
-            );
+                if (
+                    modalObservacao.tipo ===
+                    "reprovar_valor"
+                ) {
+                    await responderValorAdiantamentoTecnico(
+                        {
+                            adiantamentoId:
+                                modalObservacao.adiantamentoId,
+                            aprovado: false,
+                            observacao,
+                        }
+                    );
 
-            setDivergenciaId(null);
-            setObservacaoDivergencia("");
+                    toast.success(
+                        "Valor reprovado. O administrador poderá realizar a correção."
+                    );
+                } else {
+                    await confirmarAdiantamentoTecnico(
+                        {
+                            adiantamentoId:
+                                modalObservacao.adiantamentoId,
+                            confirmado: false,
+                            observacao,
+                        }
+                    );
 
-            await carregarAdiantamentos();
-        } catch (error) {
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Erro ao registrar divergência."
-            );
-        } finally {
-            setProcessandoId(null);
-        }
-    };
+                    toast.success(
+                        "Divergência registrada."
+                    );
+                }
+
+                fecharModalObservacao();
+
+                await carregarAdiantamentos(
+                    false
+                );
+            } catch (error) {
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "Erro ao registrar a resposta."
+                );
+            } finally {
+                setProcessandoId(null);
+            }
+        };
 
     return (
         <div>
             <StaffHeader
                 title="Adiantamentos"
-                subtitle="Consulte valores antecipados e confirme os recebimentos."
+                subtitle="Valide os valores e confirme os pagamentos recebidos."
                 action={
                     <button
                         type="button"
@@ -512,12 +771,13 @@ const StaffAdiantamentos = () => {
                 }
             />
 
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <CardResumo
-                    titulo="Total"
+                    titulo="Total ativo"
                     valor={formatarMoeda(
                         resumo.total
                     )}
+                    descricao="Adiantamentos não cancelados"
                     icon={
                         <Wallet className="h-5 w-5" />
                     }
@@ -525,43 +785,57 @@ const StaffAdiantamentos = () => {
                 />
 
                 <CardResumo
-                    titulo="Pagos"
+                    titulo="Validar valor"
                     valor={formatarMoeda(
-                        resumo.pago
+                        resumo.validar
                     )}
+                    descricao="Aguardando sua aprovação"
                     icon={
-                        <Banknote className="h-5 w-5" />
-                    }
-                    className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                />
-
-                <CardResumo
-                    titulo="Pendentes"
-                    valor={formatarMoeda(
-                        resumo.pendente
-                    )}
-                    icon={
-                        <Clock3 className="h-5 w-5" />
+                        <ShieldCheck className="h-5 w-5" />
                     }
                     className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                 />
 
                 <CardResumo
-                    titulo="Confirmados"
+                    titulo="Aguardando pagamento"
                     valor={formatarMoeda(
-                        resumo.confirmado
+                        resumo.pagar
                     )}
+                    descricao="Valores que você aprovou"
                     icon={
-                        <CheckCircle2 className="h-5 w-5" />
+                        <Banknote className="h-5 w-5" />
+                    }
+                    className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                />
+
+                <CardResumo
+                    titulo="Confirmar recebimento"
+                    valor={formatarMoeda(
+                        resumo.confirmar
+                    )}
+                    descricao="Pagamentos a confirmar"
+                    icon={
+                        <FileCheck2 className="h-5 w-5" />
                     }
                     className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
+                />
+
+                <CardResumo
+                    titulo="A compensar"
+                    valor={formatarMoeda(
+                        resumo.compensar
+                    )}
+                    descricao="Saldo para os fechamentos"
+                    icon={
+                        <CircleDollarSign className="h-5 w-5" />
+                    }
+                    className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                 />
             </section>
 
             {erro && (
                 <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                     <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-
                     {erro}
                 </div>
             )}
@@ -583,115 +857,309 @@ const StaffAdiantamentos = () => {
                 ) : (
                     adiantamentosPaginados.map(
                         (adiantamento) => {
-                            const podeConfirmar =
-                                adiantamento.status ===
-                                    "pago" &&
-                                adiantamento.confirmacao_tecnico ===
-                                    "pendente";
+                            const etapa =
+                                obterEtapaAtual(
+                                    adiantamento
+                                );
 
                             const processando =
                                 processandoId ===
                                 adiantamento.id;
+
+                            const podeValidarValor =
+                                adiantamento.status_pagamento ===
+                                    "pendente" &&
+                                adiantamento.validacao_valor_tecnico ===
+                                    "pendente";
+
+                            const aguardandoPagamento =
+                                adiantamento.validacao_valor_tecnico ===
+                                    "aprovado" &&
+                                adiantamento.status_pagamento ===
+                                    "pendente";
+
+                            const podeConfirmarRecebimento =
+                                adiantamento.status_pagamento ===
+                                    "pago" &&
+                                adiantamento.confirmacao_recebimento ===
+                                    "pendente";
+
+                            const saldoCompensar =
+                                Math.max(
+                                    0,
+                                    converterNumero(
+                                        adiantamento.valor
+                                    ) -
+                                        converterNumero(
+                                            adiantamento.valor_compensado
+                                        )
+                                );
 
                             return (
                                 <article
                                     key={
                                         adiantamento.id
                                     }
-                                    className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5"
+                                    className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
                                 >
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                                                Adiantamento
-                                            </p>
+                                    <div className="p-4 sm:p-5">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                                                    Adiantamento
+                                                </p>
 
-                                            <h3 className="mt-1 text-xl font-bold text-foreground">
-                                                {formatarMoeda(
-                                                    adiantamento.valor
-                                                )}
-                                            </h3>
+                                                <h3 className="mt-1 text-xl font-bold text-foreground">
+                                                    {formatarMoeda(
+                                                        adiantamento.valor
+                                                    )}
+                                                </h3>
 
-                                            <p className="mt-2 text-sm text-muted-foreground">
+                                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                                    {
+                                                        adiantamento.descricao
+                                                    }
+                                                </p>
+                                            </div>
+
+                                            <span
+                                                className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${etapa.className}`}
+                                            >
                                                 {
-                                                    adiantamento.descricao
+                                                    etapa.label
                                                 }
-                                            </p>
+                                            </span>
                                         </div>
 
-                                        <span
-                                            className={`w-fit rounded-full border px-2.5 py-1 text-xs font-bold capitalize ${obterClasseStatus(
-                                                adiantamento.status
-                                            )}`}
-                                        >
-                                            {
-                                                adiantamento.status
-                                            }
-                                        </span>
+                                        <div className="mt-5 grid grid-cols-1 gap-3 rounded-xl bg-secondary/40 p-4 text-sm sm:grid-cols-4">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Chamado
+                                                </p>
+
+                                                <p className="mt-1 font-bold text-foreground">
+                                                    {adiantamento
+                                                        .chamado
+                                                        ?.numero_chamado ||
+                                                        "Não relacionado"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Empresa
+                                                </p>
+
+                                                <p className="mt-1 font-bold text-foreground">
+                                                    {adiantamento
+                                                        .chamado
+                                                        ?.empresa ||
+                                                        "Não informada"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Cadastrado em
+                                                </p>
+
+                                                <p className="mt-1 font-bold text-foreground">
+                                                    {formatarData(
+                                                        adiantamento.criado_em ||
+                                                            adiantamento.solicitado_em
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Saldo a compensar
+                                                </p>
+
+                                                <p className="mt-1 font-bold text-emerald-700 dark:text-emerald-300">
+                                                    {formatarMoeda(
+                                                        saldoCompensar
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+                                            {[
+                                                {
+                                                    label:
+                                                        "Validação do valor",
+                                                    valor: adiantamento.validacao_valor_tecnico,
+                                                },
+                                                {
+                                                    label:
+                                                        "Pagamento",
+                                                    valor: adiantamento.status_pagamento,
+                                                },
+                                                {
+                                                    label:
+                                                        "Recebimento",
+                                                    valor: adiantamento.confirmacao_recebimento,
+                                                },
+                                                {
+                                                    label:
+                                                        "Compensação",
+                                                    valor: adiantamento.status_compensacao,
+                                                },
+                                            ].map(
+                                                (item) => (
+                                                    <div
+                                                        key={
+                                                            item.label
+                                                        }
+                                                        className="rounded-xl border border-border bg-background p-3"
+                                                    >
+                                                        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                            {
+                                                                item.label
+                                                            }
+                                                        </p>
+
+                                                        <span
+                                                            className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[10px] font-bold ${obterClasseStatus(
+                                                                item.valor
+                                                            )}`}
+                                                        >
+                                                            {formatarStatus(
+                                                                item.valor
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+
+                                        {adiantamento.observacao_validacao && (
+                                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                                                <p className="font-bold">
+                                                    Motivo da reprovação
+                                                </p>
+
+                                                <p className="mt-1">
+                                                    {
+                                                        adiantamento.observacao_validacao
+                                                    }
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {adiantamento.observacao_recebimento && (
+                                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                                                <p className="font-bold">
+                                                    Divergência informada
+                                                </p>
+
+                                                <p className="mt-1">
+                                                    {
+                                                        adiantamento.observacao_recebimento
+                                                    }
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {adiantamento.comprovante_url && (
+                                            <a
+                                                href={
+                                                    adiantamento.comprovante_url
+                                                }
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                                Ver comprovante
+                                            </a>
+                                        )}
+
+                                        {aguardandoPagamento && (
+                                            <div className="mt-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+                                                <Clock3 className="mt-0.5 h-5 w-5 shrink-0" />
+
+                                                <div>
+                                                    <p className="font-bold">
+                                                        Valor aprovado
+                                                    </p>
+
+                                                    <p className="mt-1">
+                                                        O administrador ainda precisa registrar o pagamento.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {(adiantamento.status_compensacao ===
+                                            "disponivel" ||
+                                            adiantamento.status_compensacao ===
+                                                "parcial") && (
+                                            <div className="mt-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+
+                                                <div>
+                                                    <p className="font-bold">
+                                                        Disponível para compensação
+                                                    </p>
+
+                                                    <p className="mt-1">
+                                                        Este valor poderá ser descontado do seu próximo fechamento.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="mt-5 grid grid-cols-1 gap-3 rounded-xl bg-secondary/40 p-4 text-sm sm:grid-cols-3">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">
-                                                Chamado
-                                            </p>
-
-                                            <p className="mt-1 font-bold text-foreground">
-                                                {adiantamento
-                                                    .chamado
-                                                    ?.numero_chamado ||
-                                                    "Não informado"}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">
-                                                Empresa
-                                            </p>
-
-                                            <p className="mt-1 font-bold text-foreground">
-                                                {adiantamento
-                                                    .chamado
-                                                    ?.empresa ||
-                                                    "Não informada"}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">
-                                                Data
-                                            </p>
-
-                                            <p className="mt-1 font-bold text-foreground">
-                                                {formatarData(
-                                                    adiantamento.pago_em ||
-                                                        adiantamento.solicitado_em
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {adiantamento.comprovante_url && (
-                                        <a
-                                            href={
-                                                adiantamento.comprovante_url
-                                            }
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-
-                                            Ver comprovante
-                                        </a>
-                                    )}
-
-                                    {podeConfirmar && (
-                                        <div className="mt-5 grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-2">
+                                    {podeValidarValor && (
+                                        <div className="grid grid-cols-1 gap-3 border-t border-border bg-secondary/10 p-4 sm:grid-cols-2">
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    void handleConfirmar(
+                                                    void handleAprovarValor(
+                                                        adiantamento.id
+                                                    )
+                                                }
+                                                disabled={
+                                                    processando
+                                                }
+                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                            >
+                                                {processando ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <ThumbsUp className="h-4 w-4" />
+                                                )}
+
+                                                Aprovar valor
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    abrirModalObservacao(
+                                                        adiantamento.id,
+                                                        "reprovar_valor"
+                                                    )
+                                                }
+                                                disabled={
+                                                    processando
+                                                }
+                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                                            >
+                                                <ThumbsDown className="h-4 w-4" />
+                                                Reprovar valor
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {podeConfirmarRecebimento && (
+                                        <div className="grid grid-cols-1 gap-3 border-t border-border bg-secondary/10 p-4 sm:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    void handleConfirmarRecebimento(
                                                         adiantamento.id
                                                     )
                                                 }
@@ -711,20 +1179,18 @@ const StaffAdiantamentos = () => {
 
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    setDivergenciaId(
-                                                        adiantamento.id
-                                                    );
-
-                                                    setObservacaoDivergencia(
-                                                        ""
-                                                    );
-                                                }}
+                                                onClick={() =>
+                                                    abrirModalObservacao(
+                                                        adiantamento.id,
+                                                        "divergencia_recebimento"
+                                                    )
+                                                }
                                                 disabled={
                                                     processando
                                                 }
-                                                className="h-11 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
                                             >
+                                                <Triangle className="h-4 w-4" />
                                                 Informar divergência
                                             </button>
                                         </div>
@@ -751,87 +1217,92 @@ const StaffAdiantamentos = () => {
                 }
             />
 
-            {divergenciaId && (
+            {modalObservacao && (
                 <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
                     <div className="w-full rounded-t-2xl border border-border bg-card p-5 shadow-2xl sm:max-w-lg sm:rounded-2xl sm:p-6">
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <h3 className="text-lg font-bold text-foreground">
-                                    Informar divergência
+                                    {modalObservacao.tipo ===
+                                    "reprovar_valor"
+                                        ? "Reprovar valor"
+                                        : "Informar divergência"}
                                 </h3>
 
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Descreva o problema encontrado no pagamento.
+                                    {modalObservacao.tipo ===
+                                    "reprovar_valor"
+                                        ? "Explique por que você não concorda com o valor cadastrado."
+                                        : "Descreva o problema encontrado no pagamento recebido."}
                                 </p>
                             </div>
 
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setDivergenciaId(
-                                        null
-                                    );
-
-                                    setObservacaoDivergencia(
-                                        ""
-                                    );
-                                }}
-                                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary"
+                                onClick={
+                                    fecharModalObservacao
+                                }
+                                disabled={
+                                    processandoId ===
+                                    modalObservacao.adiantamentoId
+                                }
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary disabled:opacity-50"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
                         <textarea
-                            value={
-                                observacaoDivergencia
-                            }
+                            value={observacao}
                             onChange={(event) =>
-                                setObservacaoDivergencia(
+                                setObservacao(
                                     event.target.value
                                 )
                             }
                             rows={5}
-                            className="mt-5 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                            placeholder="Informe a divergência encontrada."
+                            className="mt-5 w-full resize-none rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                            placeholder={
+                                modalObservacao.tipo ===
+                                "reprovar_valor"
+                                    ? "Exemplo: O valor combinado era R$ 30,00 maior."
+                                    : "Exemplo: O valor recebido está diferente do valor informado."
+                            }
                         />
 
                         <div className="mt-5 grid grid-cols-2 gap-3">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setDivergenciaId(
-                                        null
-                                    );
-
-                                    setObservacaoDivergencia(
-                                        ""
-                                    );
-                                }}
-                                className="h-11 rounded-lg border border-border bg-background text-sm font-bold text-foreground hover:bg-secondary"
+                                onClick={
+                                    fecharModalObservacao
+                                }
+                                disabled={
+                                    processandoId ===
+                                    modalObservacao.adiantamentoId
+                                }
+                                className="h-11 rounded-lg border border-border bg-background text-sm font-bold text-foreground hover:bg-secondary disabled:opacity-50"
                             >
-                                Cancelar
+                                Voltar
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() =>
-                                    void handleDivergencia()
+                                    void handleEnviarObservacao()
                                 }
                                 disabled={
                                     processandoId ===
-                                    divergenciaId
+                                    modalObservacao.adiantamentoId
                                 }
                                 className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
                             >
                                 {processandoId ===
-                                divergenciaId ? (
+                                modalObservacao.adiantamentoId ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                     <AlertCircle className="h-4 w-4" />
                                 )}
 
-                                Registrar
+                                Confirmar
                             </button>
                         </div>
                     </div>

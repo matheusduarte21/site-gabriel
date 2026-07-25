@@ -2,6 +2,17 @@ import supabase from "../../lib/supabase";
 import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
 import { getTecnicoLogado } from "./get-tecnico-logado.service";
 
+interface AdiantamentoResposta
+    extends Omit<
+        AdiantamentoTecnico,
+        "chamado"
+    > {
+    chamado?:
+        | AdiantamentoTecnico["chamado"]
+        | AdiantamentoTecnico["chamado"][]
+        | null;
+}
+
 const obterRelacaoUnica = <T>(
     valor: T | T[] | null | undefined
 ): T | null => {
@@ -36,6 +47,19 @@ export async function getMeusAdiantamentos(): Promise<
             confirmado_em,
             criado_em,
             atualizado_em,
+            validacao_valor_tecnico,
+            observacao_validacao,
+            enviado_validacao_em,
+            validado_em,
+            status_pagamento,
+            confirmacao_recebimento,
+            observacao_recebimento,
+            recebimento_respondido_em,
+            status_compensacao,
+            valor_compensado,
+            compensado_em,
+            cancelado_em,
+            motivo_cancelamento,
             chamado (
                 id,
                 numero_chamado,
@@ -57,12 +81,12 @@ export async function getMeusAdiantamentos(): Promise<
         throw new Error(error.message);
     }
 
-    return (data || []).map(
-        (registro: any) => ({
-            ...registro,
-            chamado: obterRelacaoUnica(
-                registro.chamado
-            ),
-        })
-    ) as AdiantamentoTecnico[];
+    return (
+        (data || []) as unknown as AdiantamentoResposta[]
+    ).map((registro) => ({
+        ...registro,
+        chamado: obterRelacaoUnica(
+            registro.chamado
+        ),
+    }));
 }

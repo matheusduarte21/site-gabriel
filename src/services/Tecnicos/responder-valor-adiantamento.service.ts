@@ -1,17 +1,17 @@
 import supabase from "../../lib/supabase";
 import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
 
-interface ConfirmarAdiantamentoParams {
+interface ResponderValorAdiantamentoParams {
     adiantamentoId: string;
-    confirmado: boolean;
+    aprovado: boolean;
     observacao?: string;
 }
 
-export async function confirmarAdiantamentoTecnico({
+export async function responderValorAdiantamentoTecnico({
     adiantamentoId,
-    confirmado,
+    aprovado,
     observacao,
-}: ConfirmarAdiantamentoParams): Promise<AdiantamentoTecnico> {
+}: ResponderValorAdiantamentoParams): Promise<AdiantamentoTecnico> {
     if (!adiantamentoId) {
         throw new Error(
             "Adiantamento não informado."
@@ -19,22 +19,21 @@ export async function confirmarAdiantamentoTecnico({
     }
 
     if (
-        !confirmado &&
+        !aprovado &&
         !observacao?.trim()
     ) {
         throw new Error(
-            "Informe o motivo da divergência."
+            "Informe o motivo da reprovação."
         );
     }
 
     const { data, error } =
         await supabase.rpc(
-            "responder_recebimento_adiantamento_tecnico",
+            "responder_valor_adiantamento_tecnico",
             {
                 p_adiantamento_id:
                     adiantamentoId,
-                p_confirmado:
-                    confirmado,
+                p_aprovado: aprovado,
                 p_observacao:
                     observacao?.trim() ||
                     null,
@@ -43,7 +42,7 @@ export async function confirmarAdiantamentoTecnico({
 
     if (error) {
         console.error(
-            "Erro ao responder recebimento:",
+            "Erro ao responder valor do adiantamento:",
             error.message
         );
 
