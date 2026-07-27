@@ -1,36 +1,111 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import {
+    Navigate,
+    useLocation,
+} from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import {
+    obterRotaInicialPorPerfil,
+    useAuth,
+} from "../../context/AuthContext";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireAdmin?: boolean;
-  requireStaff?: boolean; 
+    children: React.ReactNode;
+    requireAdmin?: boolean;
+    requireTecnico?: boolean;
+    requireStaff?: boolean;
+    requireCliente?: boolean;
 }
 
-const ProtectedRoute = ({ children, requireAdmin = false, requireStaff = false }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, isStaff } = useAuth();
+const ProtectedRoute = ({
+    children,
+    requireAdmin = false,
+    requireTecnico = false,
+    requireStaff = false,
+    requireCliente = false,
+}: ProtectedRouteProps) => {
+    const location = useLocation();
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
-      </div>
-    );
-  }
+    const {
+        user,
+        loading,
+        isAdmin,
+        isTecnico,
+        isCliente,
+    } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/admin/login" replace />;
-  }
+    const precisaTecnico =
+        requireTecnico ||
+        requireStaff;
 
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
 
-  if (requireStaff && !isStaff) {
-    return <Navigate to="/" replace />;
-  }
+                    <p className="text-sm font-medium text-muted-foreground">
+                        Verificando acesso...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
-  return <>{children}</>;
+    if (!user) {
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{
+                    from:
+                        location.pathname,
+                }}
+            />
+        );
+    }
+
+    const rotaCorreta =
+        obterRotaInicialPorPerfil(
+            user.tipo_perfil_id
+        ) || "/";
+
+    if (
+        requireAdmin &&
+        !isAdmin
+    ) {
+        return (
+            <Navigate
+                to={rotaCorreta}
+                replace
+            />
+        );
+    }
+
+    if (
+        precisaTecnico &&
+        !isTecnico
+    ) {
+        return (
+            <Navigate
+                to={rotaCorreta}
+                replace
+            />
+        );
+    }
+
+    if (
+        requireCliente &&
+        !isCliente
+    ) {
+        return (
+            <Navigate
+                to={rotaCorreta}
+                replace
+            />
+        );
+    }
+
+    return <>{children}</>;
 };
 
 export default ProtectedRoute;

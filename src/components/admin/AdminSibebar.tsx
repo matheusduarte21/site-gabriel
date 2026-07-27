@@ -9,8 +9,10 @@ import {
 import {
     ChevronUp,
     ClipboardList,
+    GraduationCap,
     LayoutDashboard,
     Loader2,
+    HandCoins,
     LogOut,
     Moon,
     Settings,
@@ -20,6 +22,7 @@ import {
     Users,
     Wrench,
     X,
+    PackageOpen,
 } from "lucide-react";
 import { logoutUsuario } from "../../services/auth/auth-logout.service";
 import teccorpLogo from "../../assests/TECCORP LOGO/2.png";
@@ -47,6 +50,11 @@ const navItems = [
         label: "Chamados",
     },
     {
+        to: "/admin/adiantamentos",
+        icon: HandCoins,
+        label: "Adiantamentos",
+    },
+    {
         to: "/admin/usuarios",
         icon: User2,
         label: "Usuários",
@@ -56,6 +64,17 @@ const navItems = [
         icon: UserCircle,
         label: "Perfil",
     },
+    {
+        to: "/admin/videos",
+        icon: GraduationCap,
+        label: "Vídeos e aulas",
+    },
+    {
+    to: "/admin/estoque",
+    icon: PackageOpen,
+    label: "Estoque",
+},
+
 ];
 
 interface AdminSidebarProps {

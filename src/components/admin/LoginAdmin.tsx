@@ -1,112 +1,251 @@
 import { useState } from "react";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import {
+    Eye,
+    EyeOff,
+    Loader2,
+    Lock,
+    Mail,
+    ShieldCheck,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import supabase from "../../lib/supabase";
+import { getUsuarioSistemaAtual } from "../../services/auth/get-usuario-sistema-atual.service";
+import teccorpLogo from "../../assests/TECCORP LOGO/2.png";
 
-export default function LoginAdmin() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+const LoginAdmin = () => {
+    const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
+    const [email, setEmail] =
+        useState("");
+
+    const [password, setPassword] =
+        useState("");
+
+    const [mostrarSenha, setMostrarSenha] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
+
+    const handleLogin = async (
+        event: React.FormEvent
+    ) => {
+        event.preventDefault();
+
+        if (loading) {
+            return;
+        }
 
         try {
-            const { error: authError } = await supabase.auth.signInWithPassword({
-                email, 
-                password,
-            });
+            setLoading(true);
+            setError("");
 
-            if (authError) {
-                setError("E-mail ou senha incorretos.");
-                setLoading(false);
-            } else {
-                window.location.replace("/admin");
+            const {
+                data,
+                error: authError,
+            } =
+                await supabase.auth.signInWithPassword(
+                    {
+                        email: email.trim(),
+                        password,
+                    }
+                );
+
+            if (authError || !data.user) {
+                setError(
+                    "E-mail ou senha incorretos."
+                );
+                return;
             }
-        } catch (err) {
-            setError("Ocorreu um erro inesperado ao tentar entrar.");
+
+            const usuario =
+                await getUsuarioSistemaAtual(
+                    data.user
+                );
+
+            if (
+                !usuario ||
+                Number(
+                    usuario.tipo_perfil_id
+                ) !== 1
+            ) {
+                await supabase.auth.signOut();
+
+                setError(
+                    "Este acesso é exclusivo para administradores."
+                );
+
+                return;
+            }
+
+            navigate("/admin", {
+                replace: true,
+            });
+        } catch (error) {
+            console.error(
+                "Erro no login administrativo:",
+                error
+            );
+
+            setError(
+                "Ocorreu um erro ao tentar entrar."
+            );
+        } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Acesso Restrito
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-                Painel de Administração
-            </p>
-        </div>
-
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6" onSubmit={handleLogin}>
-                {error && (
-                <div className="bg-red-50 border-l-4 border-red-400 p-4">
-                    <p className="text-sm text-red-700">{error}</p>
-                </div>
-                )}
-
-                <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    E-mail
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                        id="email"
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border text-gray-900 bg-white"
-                        placeholder="admin@techservice.com.br"
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
+            <div className="w-full max-w-md">
+                <div className="mb-6 text-center">
+                    <img
+                        src={teccorpLogo}
+                        alt="Teccorp"
+                        className="mx-auto h-auto w-[190px]"
                     />
-                </div>
+
+                    <h1 className="mt-6 text-2xl font-bold text-slate-900">
+                        Acesso administrativo
+                    </h1>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                        Entre para gerenciar a operação da Teccorp.
+                    </p>
                 </div>
 
-                <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Senha
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock className="h-5 w-5 text-gray-400" />
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+                    <div className="mb-6 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
+                            <ShieldCheck className="h-5 w-5" />
+                        </span>
+
+                        <div>
+                            <p className="text-sm font-bold text-slate-900">
+                                Painel de administração
+                            </p>
+
+                            <p className="text-xs text-slate-500">
+                                Acesso permitido somente para administradores.
+                            </p>
+                        </div>
                     </div>
-                    <input
-                        id="password"
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md h-10 border text-gray-900 bg-white"
-                        placeholder="••••••••"
-                    />
-                </div>
-                </div>
 
-                <div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 h-10 items-center"
+                    <form
+                        onSubmit={handleLogin}
+                        className="space-y-5"
                     >
-                        {loading ? (
-                            <Loader2 className="animate-spin h-5 w-5" />
-                        ) : (
-                            "Entrar"
+                        {error && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                                {error}
+                            </div>
                         )}
-                    </button>
+
+                        <div className="space-y-1.5">
+                            <label
+                                htmlFor="admin-email"
+                                className="text-sm font-semibold text-slate-700"
+                            >
+                                E-mail
+                            </label>
+
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                                <input
+                                    id="admin-email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(event) =>
+                                        setEmail(
+                                            event.target
+                                                .value
+                                        )
+                                    }
+                                    required
+                                    autoComplete="email"
+                                    placeholder="admin@teccorp.com.br"
+                                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label
+                                htmlFor="admin-password"
+                                className="text-sm font-semibold text-slate-700"
+                            >
+                                Senha
+                            </label>
+
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                                <input
+                                    id="admin-password"
+                                    type={
+                                        mostrarSenha
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    value={password}
+                                    onChange={(event) =>
+                                        setPassword(
+                                            event.target
+                                                .value
+                                        )
+                                    }
+                                    required
+                                    autoComplete="current-password"
+                                    placeholder="••••••••"
+                                    className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10"
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setMostrarSenha(
+                                            (valor) =>
+                                                !valor
+                                        )
+                                    }
+                                    aria-label={
+                                        mostrarSenha
+                                            ? "Ocultar senha"
+                                            : "Mostrar senha"
+                                    }
+                                    className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                >
+                                    {mostrarSenha ? (
+                                        <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {loading && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+
+                            {loading
+                                ? "Entrando..."
+                                : "Entrar"}
+                        </button>
+                    </form>
                 </div>
-            </form>
             </div>
         </div>
-        </div>
     );
-}
+};
+
+export default LoginAdmin;

@@ -1,6 +1,7 @@
 import {
     type KeyboardEvent,
     useEffect,
+    useMemo,
     useState,
 } from "react";
 import {
@@ -17,19 +18,30 @@ import {
 import AdminHeader from "./AdminHeader";
 import ChamadoDetalheModal from "./ChamadoDetalheModal";
 import TecnicoDetalheModal from "./TecnicoDetalheModal";
+import FiltroMes, {
+    ValorFiltroMes,
+} from "./FiltroMes";
 import { Button } from "../ui/Button";
 import { Chamado } from "../../types/chamado.type";
-import { getChamadosAgendados } from "../../services/Chamados/get-chamados.service";
+import { getTodosChamados } from "../../services/Chamados/get-all-chamados.service";
+import { getTodosTecnicos } from "../../services/Tecnicos/get-all-tecnicos.service";
 import {
     ChamadosPorEmpresa,
     DesempenhoTecnico,
-    getChamadosPorEmpresa,
-    getDesempenhoTecnicos,
 } from "../../services/dashboard/dashboard.service";
 
 const limit = 5;
 
-const formatCurrency = (value: number) => {
+interface PaginacaoProps {
+    paginaAtual: number;
+    totalPaginas: number;
+    totalResultados: number;
+    onChange: (pagina: number) => void;
+}
+
+const formatCurrency = (
+    value: number
+): string => {
     return value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
@@ -37,7 +49,11 @@ const formatCurrency = (value: number) => {
 };
 
 const parseValue = (
-    value: number | string | null | undefined
+    value:
+        | number
+        | string
+        | null
+        | undefined
 ): number => {
     if (
         value === null ||
@@ -48,145 +64,687 @@ const parseValue = (
     }
 
     if (typeof value === "number") {
-        return Number.isFinite(value) ? value : 0;
+        return Number.isFinite(value)
+            ? value
+            : 0;
     }
 
     const valorNormalizado = value
         .trim()
         .replace(/\s/g, "")
-        .replace(/\.(?=\d{3}(?:\D|$))/g, "")
+        .replace(
+            /\.(?=\d{3}(?:\D|$))/g,
+            ""
+        )
         .replace(",", ".");
 
-    const numero = Number(valorNormalizado);
+    const numero = Number(
+        valorNormalizado
+    );
 
-    return Number.isFinite(numero) ? numero : 0;
+    return Number.isFinite(numero)
+        ? numero
+        : 0;
+};
+
+const obterMesAtual = (): string => {
+    const hoje = new Date();
+
+    const ano = hoje.getFullYear();
+
+    const mes = String(
+        hoje.getMonth() + 1
+    ).padStart(2, "0");
+
+    return `${ano}-${mes}`;
+};
+
+const obterDataReferencia = (
+    chamado: Chamado
+): string | null => {
+    return (
+        chamado.data_agendamento ||
+        chamado.data_criacao ||
+        null
+    );
+};
+
+const obterMesReferencia = (
+    chamado: Chamado
+): string | null => {
+    const dataReferencia =
+        obterDataReferencia(chamado);
+
+    if (!dataReferencia) {
+        return null;
+    }
+
+    const mesReferencia =
+        dataReferencia.slice(0, 7);
+
+    if (
+        !/^\d{4}-\d{2}$/.test(
+            mesReferencia
+        )
+    ) {
+        return null;
+    }
+
+    return mesReferencia;
+};
+
+const obterEstadoTecnico = (
+    tecnico: any
+): string => {
+    if (!tecnico) {
+        return "Não informado";
+    }
+
+    if (
+        typeof tecnico.estado ===
+        "string"
+    ) {
+        return tecnico.estado;
+    }
+
+    if (tecnico.estado?.sigla) {
+        return tecnico.estado.sigla;
+    }
+
+    if (tecnico.estado?.nome) {
+        return tecnico.estado.nome;
+    }
+
+    if (tecnico.uf) {
+        return tecnico.uf;
+    }
+
+    if (tecnico.estado_nome) {
+        return tecnico.estado_nome;
+    }
+
+    return "Não informado";
+};
+
+const Paginacao = ({
+    paginaAtual,
+    totalPaginas,
+    totalResultados,
+    onChange,
+}: PaginacaoProps) => {
+    if (totalResultados === 0) {
+        return null;
+    }
+
+    const inicio =
+        (paginaAtual - 1) * limit + 1;
+
+    const fim = Math.min(
+        paginaAtual * limit,
+        totalResultados
+    );
+
+    return (
+        <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm text-muted-foreground">
+                Mostrando{" "}
+                <span className="font-medium text-foreground">
+                    {inicio}
+                </span>{" "}
+                a{" "}
+                <span className="font-medium text-foreground">
+                    {fim}
+                </span>{" "}
+                de{" "}
+                <span className="font-medium text-foreground">
+                    {totalResultados}
+                </span>{" "}
+                resultados
+            </span>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                        paginaAtual === 1
+                    }
+                    onClick={() =>
+                        onChange(
+                            Math.max(
+                                1,
+                                paginaAtual - 1
+                            )
+                        )
+                    }
+                    className="h-8 w-8 rounded-lg p-0"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {Array.from(
+                    {
+                        length: Math.max(
+                            totalPaginas,
+                            1
+                        ),
+                    },
+                    (_, index) => index + 1
+                ).map((pagina) => (
+                    <Button
+                        key={pagina}
+                        type="button"
+                        variant={
+                            pagina === paginaAtual
+                                ? "default"
+                                : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                            onChange(pagina)
+                        }
+                        className="h-8 w-8 rounded-lg p-0 text-xs"
+                    >
+                        {pagina}
+                    </Button>
+                ))}
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                        paginaAtual >=
+                        totalPaginas
+                    }
+                    onClick={() =>
+                        onChange(
+                            Math.min(
+                                totalPaginas,
+                                paginaAtual + 1
+                            )
+                        )
+                    }
+                    className="h-8 w-8 rounded-lg p-0"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
 };
 
 const AdminHome = () => {
-    const [chamadosAgendados, setChamadosAgendados] =
-        useState<Chamado[]>([]);
-    const [empresas, setEmpresas] =
-        useState<ChamadosPorEmpresa[]>([]);
-    const [tecnicos, setTecnicos] =
-        useState<DesempenhoTecnico[]>([]);
+    const [
+        chamadosOriginais,
+        setChamadosOriginais,
+    ] = useState<Chamado[]>([]);
 
-    const [loadingChamados, setLoadingChamados] =
-        useState(true);
-    const [loadingEmpresas, setLoadingEmpresas] =
-        useState(true);
-    const [loadingTecnicos, setLoadingTecnicos] =
+    const [
+        tecnicosOriginais,
+        setTecnicosOriginais,
+    ] = useState<any[]>([]);
+
+    const [loading, setLoading] =
         useState(true);
 
-    const [pageChamados, setPageChamados] = useState(1);
-    const [pageEmpresas, setPageEmpresas] = useState(1);
-    const [pageTecnicos, setPageTecnicos] = useState(1);
+    const [
+        mesSelecionado,
+        setMesSelecionado,
+    ] = useState<ValorFiltroMes>(
+        obterMesAtual()
+    );
 
-    const [modalChamadoAberto, setModalChamadoAberto] =
-        useState(false);
+    const [
+        pageChamados,
+        setPageChamados,
+    ] = useState(1);
+
+    const [
+        pageEmpresas,
+        setPageEmpresas,
+    ] = useState(1);
+
+    const [
+        pageTecnicos,
+        setPageTecnicos,
+    ] = useState(1);
+
+    const [
+        modalChamadoAberto,
+        setModalChamadoAberto,
+    ] = useState(false);
+
     const [
         chamadoSelecionadoId,
         setChamadoSelecionadoId,
     ] = useState<string | null>(null);
-    const [empresaSelecionada, setEmpresaSelecionada] =
-        useState<string | null>(null);
 
-    const [modalTecnicoAberto, setModalTecnicoAberto] =
-        useState(false);
-    const [tecnicoSelecionado, setTecnicoSelecionado] =
-        useState<DesempenhoTecnico | null>(null);
+    const [
+        empresaSelecionada,
+        setEmpresaSelecionada,
+    ] = useState<string | null>(null);
+
+    const [
+        modalTecnicoAberto,
+        setModalTecnicoAberto,
+    ] = useState(false);
+
+    const [
+        tecnicoSelecionado,
+        setTecnicoSelecionado,
+    ] =
+        useState<DesempenhoTecnico | null>(
+            null
+        );
 
     useEffect(() => {
-        const carregarChamadosAgendados = async () => {
-            try {
-                setLoadingChamados(true);
+        const carregarDados =
+            async () => {
+                try {
+                    setLoading(true);
 
-                const data =
-                    await getChamadosAgendados("2");
+                    const [
+                        chamadosDB,
+                        tecnicosDB,
+                    ] = await Promise.all([
+                        getTodosChamados(),
+                        getTodosTecnicos(),
+                    ]);
 
-                setChamadosAgendados(data);
-            } catch (error) {
-                console.error(
-                    "Erro ao carregar chamados agendados:",
-                    error
-                );
-            } finally {
-                setLoadingChamados(false);
-            }
-        };
+                    setChamadosOriginais(
+                        chamadosDB as unknown as Chamado[]
+                    );
 
-        carregarChamadosAgendados();
+                    setTecnicosOriginais(
+                        tecnicosDB
+                    );
+                } catch (error) {
+                    console.error(
+                        "Erro ao carregar o dashboard:",
+                        error
+                    );
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+        carregarDados();
     }, []);
 
     useEffect(() => {
-        const carregarEmpresas = async () => {
-            try {
-                setLoadingEmpresas(true);
+        setPageChamados(1);
+        setPageEmpresas(1);
+        setPageTecnicos(1);
+    }, [mesSelecionado]);
 
-                const data = await getChamadosPorEmpresa(
-                    pageEmpresas,
-                    limit
-                );
-
-                setEmpresas(data);
-            } catch (error) {
-                console.error(
-                    "Erro ao carregar empresas:",
-                    error
-                );
-            } finally {
-                setLoadingEmpresas(false);
+    const chamadosFiltrados =
+        useMemo(() => {
+            if (
+                mesSelecionado ===
+                "todos"
+            ) {
+                return chamadosOriginais;
             }
-        };
 
-        carregarEmpresas();
-    }, [pageEmpresas]);
+            return chamadosOriginais.filter(
+                (chamado) =>
+                    obterMesReferencia(
+                        chamado
+                    ) === mesSelecionado
+            );
+        }, [
+            chamadosOriginais,
+            mesSelecionado,
+        ]);
+
+    const chamadosAgendados =
+        useMemo(() => {
+            return chamadosFiltrados.filter(
+                (chamado) =>
+                    Number(
+                        chamado.status_id
+                    ) === 2
+            );
+        }, [chamadosFiltrados]);
+
+    const empresas = useMemo(() => {
+        const mapaEmpresas = new Map<
+            string,
+            {
+                empresa: string;
+                chamados: number;
+            }
+        >();
+
+        chamadosFiltrados.forEach(
+            (chamado) => {
+                const nomeEmpresa =
+                    chamado.empresa?.trim() ||
+                    "Empresa não informada";
+
+                const empresaAtual =
+                    mapaEmpresas.get(
+                        nomeEmpresa
+                    );
+
+                if (empresaAtual) {
+                    empresaAtual.chamados +=
+                        1;
+                } else {
+                    mapaEmpresas.set(
+                        nomeEmpresa,
+                        {
+                            empresa:
+                                nomeEmpresa,
+                            chamados: 1,
+                        }
+                    );
+                }
+            }
+        );
+
+        const listaEmpresas =
+            Array.from(
+                mapaEmpresas.values()
+            ).sort(
+                (empresaA, empresaB) =>
+                    empresaB.chamados -
+                    empresaA.chamados
+            );
+
+        return listaEmpresas.map(
+            (empresa) => ({
+                ...empresa,
+                total_registros:
+                    listaEmpresas.length,
+            })
+        ) as ChamadosPorEmpresa[];
+    }, [chamadosFiltrados]);
+
+    const tecnicos = useMemo(() => {
+        const tecnicosPorId = new Map<
+            string,
+            any
+        >();
+
+        tecnicosOriginais.forEach(
+            (tecnico) => {
+                if (tecnico?.id) {
+                    tecnicosPorId.set(
+                        String(tecnico.id),
+                        tecnico
+                    );
+                }
+            }
+        );
+
+        const mapaDesempenho =
+            new Map<
+                string,
+                {
+                    tecnico_id: string;
+                    nome: string;
+                    estado: string;
+                    chamados: number;
+                    faturado: number;
+                    pago: number;
+                    lucro: number;
+                }
+            >();
+
+        chamadosFiltrados.forEach(
+            (chamado) => {
+                if (!chamado.tecnico_id) {
+                    return;
+                }
+
+                const tecnicoId = String(
+                    chamado.tecnico_id
+                );
+
+                const tecnicoBanco =
+                    tecnicosPorId.get(
+                        tecnicoId
+                    );
+
+                const faturado =
+                    parseValue(
+                        chamado.valor_total_cliente
+                    );
+
+                const pago = parseValue(
+                    chamado.valor_total_tecnico
+                );
+
+                const desempenhoAtual =
+                    mapaDesempenho.get(
+                        tecnicoId
+                    );
+
+                if (desempenhoAtual) {
+                    desempenhoAtual.chamados +=
+                        1;
+
+                    desempenhoAtual.faturado +=
+                        faturado;
+
+                    desempenhoAtual.pago +=
+                        pago;
+
+                    desempenhoAtual.lucro +=
+                        faturado - pago;
+                } else {
+                    mapaDesempenho.set(
+                        tecnicoId,
+                        {
+                            tecnico_id:
+                                tecnicoId,
+                            nome:
+                                tecnicoBanco?.nome ||
+                                "Técnico não informado",
+                            estado:
+                                obterEstadoTecnico(
+                                    tecnicoBanco
+                                ),
+                            chamados: 1,
+                            faturado,
+                            pago,
+                            lucro:
+                                faturado -
+                                pago,
+                        }
+                    );
+                }
+            }
+        );
+
+        const listaTecnicos =
+            Array.from(
+                mapaDesempenho.values()
+            ).sort(
+                (
+                    tecnicoA,
+                    tecnicoB
+                ) =>
+                    tecnicoB.faturado -
+                    tecnicoA.faturado
+            );
+
+        return listaTecnicos.map(
+            (tecnico) => ({
+                ...tecnico,
+                total_registros:
+                    listaTecnicos.length,
+            })
+        ) as DesempenhoTecnico[];
+    }, [
+        chamadosFiltrados,
+        tecnicosOriginais,
+    ]);
+
+    const totalFaturado =
+        useMemo(() => {
+            return chamadosFiltrados.reduce(
+                (total, chamado) =>
+                    total +
+                    parseValue(
+                        chamado.valor_total_cliente
+                    ),
+                0
+            );
+        }, [chamadosFiltrados]);
+
+    const totalPagoTecnico =
+        useMemo(() => {
+            return chamadosFiltrados.reduce(
+                (total, chamado) =>
+                    total +
+                    parseValue(
+                        chamado.valor_total_tecnico
+                    ),
+                0
+            );
+        }, [chamadosFiltrados]);
+
+    const lucroTotal =
+        totalFaturado -
+        totalPagoTecnico;
+
+    const totalChamados =
+        chamadosAgendados.length;
+
+    const totalEmpresas =
+        empresas.length;
+
+    const totalTecnicos =
+        tecnicos.length;
+
+    const totalPagesChamados =
+        Math.max(
+            1,
+            Math.ceil(
+                totalChamados / limit
+            )
+        );
+
+    const totalPagesEmpresas =
+        Math.max(
+            1,
+            Math.ceil(
+                totalEmpresas / limit
+            )
+        );
+
+    const totalPagesTecnicos =
+        Math.max(
+            1,
+            Math.ceil(
+                totalTecnicos / limit
+            )
+        );
+
+    const chamadosAgendadosPaginados =
+        chamadosAgendados.slice(
+            (pageChamados - 1) *
+                limit,
+            pageChamados * limit
+        );
+
+    const empresasPaginadas =
+        empresas.slice(
+            (pageEmpresas - 1) *
+                limit,
+            pageEmpresas * limit
+        );
+
+    const tecnicosPaginados =
+        tecnicos.slice(
+            (pageTecnicos - 1) *
+                limit,
+            pageTecnicos * limit
+        );
 
     useEffect(() => {
-        const carregarTecnicos = async () => {
-            try {
-                setLoadingTecnicos(true);
+        if (
+            pageChamados >
+            totalPagesChamados
+        ) {
+            setPageChamados(
+                totalPagesChamados
+            );
+        }
+    }, [
+        pageChamados,
+        totalPagesChamados,
+    ]);
 
-                const data = await getDesempenhoTecnicos(
-                    pageTecnicos,
-                    limit
-                );
+    useEffect(() => {
+        if (
+            pageEmpresas >
+            totalPagesEmpresas
+        ) {
+            setPageEmpresas(
+                totalPagesEmpresas
+            );
+        }
+    }, [
+        pageEmpresas,
+        totalPagesEmpresas,
+    ]);
 
-                setTecnicos(data);
-            } catch (error) {
-                console.error(
-                    "Erro ao carregar técnicos:",
-                    error
-                );
-            } finally {
-                setLoadingTecnicos(false);
-            }
-        };
+    useEffect(() => {
+        if (
+            pageTecnicos >
+            totalPagesTecnicos
+        ) {
+            setPageTecnicos(
+                totalPagesTecnicos
+            );
+        }
+    }, [
+        pageTecnicos,
+        totalPagesTecnicos,
+    ]);
 
-        carregarTecnicos();
-    }, [pageTecnicos]);
-
-    const abrirChamado = (id: string) => {
+    const abrirChamado = (
+        id: string
+    ) => {
         setEmpresaSelecionada(null);
         setChamadoSelecionadoId(id);
         setModalChamadoAberto(true);
     };
 
-    const abrirChamadosEmpresa = (empresa: string) => {
-        setChamadoSelecionadoId(null);
-        setEmpresaSelecionada(empresa);
+    const abrirChamadosEmpresa = (
+        empresa: string
+    ) => {
+        setChamadoSelecionadoId(
+            null
+        );
+
+        setEmpresaSelecionada(
+            empresa
+        );
+
         setModalChamadoAberto(true);
     };
 
     const fecharModalChamado = () => {
         setModalChamadoAberto(false);
-        setChamadoSelecionadoId(null);
+        setChamadoSelecionadoId(
+            null
+        );
         setEmpresaSelecionada(null);
     };
 
     const abrirTecnico = (
         tecnico: DesempenhoTecnico
     ) => {
-        setTecnicoSelecionado(tecnico);
+        setTecnicoSelecionado(
+            tecnico
+        );
+
         setModalTecnicoAberto(true);
     };
 
@@ -208,56 +766,18 @@ const AdminHome = () => {
         }
     };
 
-    const totalFaturado = chamadosAgendados.reduce(
-        (total, chamado) =>
-            total +
-            parseValue(
-                chamado.valor_total_cliente
-            ),
-        0
-    );
-
-    const totalPagoTecnico =
-        chamadosAgendados.reduce(
-            (total, chamado) =>
-                total +
-                parseValue(
-                    chamado.valor_total_tecnico
-                ),
-            0
-        );
-
-    const lucroTotal =
-        totalFaturado - totalPagoTecnico;
-
-    const totalChamados =
-        chamadosAgendados.length;
-    const totalEmpresas =
-        empresas[0]?.total_registros ?? 0;
-    const totalTecnicos =
-        tecnicos[0]?.total_registros ?? 0;
-
-    const totalPagesChamados = Math.ceil(
-        totalChamados / limit
-    );
-    const totalPagesEmpresas = Math.ceil(
-        totalEmpresas / limit
-    );
-    const totalPagesTecnicos = Math.ceil(
-        totalTecnicos / limit
-    );
-
-    const chamadosAgendadosPaginados =
-        chamadosAgendados.slice(
-            (pageChamados - 1) * limit,
-            pageChamados * limit
-        );
-
     return (
         <div className="space-y-6">
             <AdminHeader
                 title="Dashboard Administrativo"
                 subtitle="Visão geral da operação e métricas de desempenho"
+            />
+
+            <FiltroMes
+                value={mesSelecionado}
+                onChange={
+                    setMesSelecionado
+                }
             />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -271,15 +791,15 @@ const AdminHome = () => {
                     </div>
 
                     <p className="mt-4 text-3xl font-bold tracking-tight">
-                        {loadingChamados
+                        {loading
                             ? "..."
                             : String(
-                                  chamadosAgendados.length
+                                  totalChamados
                               )}
                     </p>
 
                     <p className="mt-1 text-xs text-blue-200">
-                        Chamados em andamento
+                        Chamados em andamento no período
                     </p>
                 </div>
 
@@ -293,7 +813,7 @@ const AdminHome = () => {
                     </div>
 
                     <p className="mt-4 text-3xl font-bold tracking-tight">
-                        {loadingChamados
+                        {loading
                             ? "..."
                             : formatCurrency(
                                   totalFaturado
@@ -301,7 +821,7 @@ const AdminHome = () => {
                     </p>
 
                     <p className="mt-1 text-xs text-indigo-200">
-                        Valor faturado
+                        Valor faturado no período
                     </p>
                 </div>
 
@@ -315,7 +835,7 @@ const AdminHome = () => {
                     </div>
 
                     <p className="mt-4 text-3xl font-bold tracking-tight">
-                        {loadingChamados
+                        {loading
                             ? "..."
                             : formatCurrency(
                                   totalPagoTecnico
@@ -323,27 +843,55 @@ const AdminHome = () => {
                     </p>
 
                     <p className="mt-1 text-xs text-amber-100">
-                        Pago ao técnico
+                        Pago aos técnicos no período
                     </p>
                 </div>
 
-                <div className="flex flex-col rounded-xl bg-emerald-600 p-6 text-white shadow-md transition-transform hover:-translate-y-1">
+                <div
+                    className={`flex flex-col rounded-xl p-6 text-white shadow-md transition-transform hover:-translate-y-1 ${
+                        lucroTotal >= 0
+                            ? "bg-emerald-600"
+                            : "bg-red-600"
+                    }`}
+                >
                     <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-emerald-100">
-                            Valor Ganho
+                        <p
+                            className={`text-sm font-medium ${
+                                lucroTotal >= 0
+                                    ? "text-emerald-100"
+                                    : "text-red-100"
+                            }`}
+                        >
+                            {lucroTotal >= 0
+                                ? "Valor Ganho"
+                                : "Prejuízo"}
                         </p>
 
-                        <TrendingUp className="h-5 w-5 text-emerald-200" />
+                        <TrendingUp
+                            className={`h-5 w-5 ${
+                                lucroTotal >= 0
+                                    ? "text-emerald-200"
+                                    : "text-red-200"
+                            }`}
+                        />
                     </div>
 
                     <p className="mt-4 text-3xl font-bold tracking-tight">
-                        {loadingChamados
+                        {loading
                             ? "..."
-                            : formatCurrency(lucroTotal)}
+                            : formatCurrency(
+                                  lucroTotal
+                              )}
                     </p>
 
-                    <p className="mt-1 text-xs text-emerald-200">
-                        Lucro da operação
+                    <p
+                        className={`mt-1 text-xs ${
+                            lucroTotal >= 0
+                                ? "text-emerald-200"
+                                : "text-red-200"
+                        }`}
+                    >
+                        Resultado da operação no período
                     </p>
                 </div>
             </div>
@@ -359,24 +907,26 @@ const AdminHome = () => {
                     </div>
 
                     <div className="space-y-3">
-                        {loadingChamados && (
+                        {loading && (
                             <p className="text-sm text-muted-foreground">
                                 Carregando chamados...
                             </p>
                         )}
 
-                        {!loadingChamados &&
+                        {!loading &&
                             chamadosAgendados.length ===
                                 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    Nenhum chamado em
-                                    andamento encontrado.
+                                <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                                    Nenhum chamado em andamento encontrado no período.
                                 </p>
                             )}
 
-                        {!loadingChamados &&
+                        {!loading &&
                             chamadosAgendadosPaginados.map(
-                                (chamado, index) => {
+                                (
+                                    chamado,
+                                    index
+                                ) => {
                                     const chamadoId =
                                         chamado.id;
 
@@ -404,7 +954,9 @@ const AdminHome = () => {
                                                     ? 0
                                                     : -1
                                             }
-                                            onClick={abrir}
+                                            onClick={
+                                                abrir
+                                            }
                                             onKeyDown={(
                                                 event
                                             ) => {
@@ -436,7 +988,7 @@ const AdminHome = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600">
+                                                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
                                                     Em andamento
                                                 </span>
 
@@ -446,6 +998,7 @@ const AdminHome = () => {
                                                         !chamadoId
                                                     }
                                                     title="Visualizar chamado"
+                                                    aria-label="Visualizar chamado"
                                                     onClick={(
                                                         event
                                                     ) => {
@@ -470,116 +1023,22 @@ const AdminHome = () => {
                             )}
                     </div>
 
-                    {!loadingChamados &&
-                        totalPagesChamados > 1 && (
-                            <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm text-muted-foreground">
-                                    Mostrando{" "}
-                                    <span className="font-medium text-foreground">
-                                        {(pageChamados -
-                                            1) *
-                                            limit +
-                                            1}
-                                    </span>{" "}
-                                    a{" "}
-                                    <span className="font-medium text-foreground">
-                                        {Math.min(
-                                            pageChamados *
-                                                limit,
-                                            totalChamados
-                                        )}
-                                    </span>{" "}
-                                    de{" "}
-                                    <span className="font-medium text-foreground">
-                                        {totalChamados}
-                                    </span>{" "}
-                                    resultados
-                                </span>
-
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageChamados ===
-                                            1
-                                        }
-                                        onClick={() =>
-                                            setPageChamados(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.max(
-                                                        1,
-                                                        pagina -
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-
-                                    {Array.from(
-                                        {
-                                            length: totalPagesChamados,
-                                        },
-                                        (_, index) =>
-                                            index + 1
-                                    ).map(
-                                        (pagina) => (
-                                            <Button
-                                                key={
-                                                    pagina
-                                                }
-                                                variant={
-                                                    pagina ===
-                                                    pageChamados
-                                                        ? "default"
-                                                        : "outline"
-                                                }
-                                                size="sm"
-                                                onClick={() =>
-                                                    setPageChamados(
-                                                        pagina
-                                                    )
-                                                }
-                                                className="h-8 w-8 rounded-lg p-0 text-xs"
-                                            >
-                                                {
-                                                    pagina
-                                                }
-                                            </Button>
-                                        )
-                                    )}
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageChamados ===
-                                            totalPagesChamados
-                                        }
-                                        onClick={() =>
-                                            setPageChamados(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.min(
-                                                        totalPagesChamados,
-                                                        pagina +
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                    {!loading && (
+                        <Paginacao
+                            paginaAtual={
+                                pageChamados
+                            }
+                            totalPaginas={
+                                totalPagesChamados
+                            }
+                            totalResultados={
+                                totalChamados
+                            }
+                            onChange={
+                                setPageChamados
+                            }
+                        />
+                    )}
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -592,23 +1051,26 @@ const AdminHome = () => {
                     </div>
 
                     <div className="space-y-3">
-                        {loadingEmpresas && (
+                        {loading && (
                             <p className="text-sm text-muted-foreground">
                                 Carregando empresas...
                             </p>
                         )}
 
-                        {!loadingEmpresas &&
-                            empresas.length === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    Nenhuma empresa
-                                    encontrada.
+                        {!loading &&
+                            empresas.length ===
+                                0 && (
+                                <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                                    Nenhuma empresa encontrada no período.
                                 </p>
                             )}
 
-                        {!loadingEmpresas &&
-                            empresas.map(
-                                (empresa, index) => (
+                        {!loading &&
+                            empresasPaginadas.map(
+                                (
+                                    empresa,
+                                    index
+                                ) => (
                                     <div
                                         key={
                                             empresa.empresa
@@ -663,6 +1125,7 @@ const AdminHome = () => {
                                             <button
                                                 type="button"
                                                 title="Visualizar chamados da empresa"
+                                                aria-label="Visualizar chamados da empresa"
                                                 onClick={(
                                                     event
                                                 ) => {
@@ -682,116 +1145,22 @@ const AdminHome = () => {
                             )}
                     </div>
 
-                    {!loadingEmpresas &&
-                        totalPagesEmpresas > 1 && (
-                            <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm text-muted-foreground">
-                                    Mostrando{" "}
-                                    <span className="font-medium text-foreground">
-                                        {(pageEmpresas -
-                                            1) *
-                                            limit +
-                                            1}
-                                    </span>{" "}
-                                    a{" "}
-                                    <span className="font-medium text-foreground">
-                                        {Math.min(
-                                            pageEmpresas *
-                                                limit,
-                                            totalEmpresas
-                                        )}
-                                    </span>{" "}
-                                    de{" "}
-                                    <span className="font-medium text-foreground">
-                                        {totalEmpresas}
-                                    </span>{" "}
-                                    resultados
-                                </span>
-
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageEmpresas ===
-                                            1
-                                        }
-                                        onClick={() =>
-                                            setPageEmpresas(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.max(
-                                                        1,
-                                                        pagina -
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-
-                                    {Array.from(
-                                        {
-                                            length: totalPagesEmpresas,
-                                        },
-                                        (_, index) =>
-                                            index + 1
-                                    ).map(
-                                        (pagina) => (
-                                            <Button
-                                                key={
-                                                    pagina
-                                                }
-                                                variant={
-                                                    pagina ===
-                                                    pageEmpresas
-                                                        ? "default"
-                                                        : "outline"
-                                                }
-                                                size="sm"
-                                                onClick={() =>
-                                                    setPageEmpresas(
-                                                        pagina
-                                                    )
-                                                }
-                                                className="h-8 w-8 rounded-lg p-0 text-xs"
-                                            >
-                                                {
-                                                    pagina
-                                                }
-                                            </Button>
-                                        )
-                                    )}
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageEmpresas ===
-                                            totalPagesEmpresas
-                                        }
-                                        onClick={() =>
-                                            setPageEmpresas(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.min(
-                                                        totalPagesEmpresas,
-                                                        pagina +
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                    {!loading && (
+                        <Paginacao
+                            paginaAtual={
+                                pageEmpresas
+                            }
+                            totalPaginas={
+                                totalPagesEmpresas
+                            }
+                            totalResultados={
+                                totalEmpresas
+                            }
+                            onChange={
+                                setPageEmpresas
+                            }
+                        />
+                    )}
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-6 shadow-sm lg:col-span-2">
@@ -804,23 +1173,26 @@ const AdminHome = () => {
                     </div>
 
                     <div className="space-y-3">
-                        {loadingTecnicos && (
+                        {loading && (
                             <p className="text-sm text-muted-foreground">
                                 Carregando técnicos...
                             </p>
                         )}
 
-                        {!loadingTecnicos &&
-                            tecnicos.length === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    Nenhum técnico
-                                    encontrado.
+                        {!loading &&
+                            tecnicos.length ===
+                                0 && (
+                                <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                                    Nenhum técnico com chamados no período.
                                 </p>
                             )}
 
-                        {!loadingTecnicos &&
-                            tecnicos.map(
-                                (tecnico, index) => {
+                        {!loading &&
+                            tecnicosPaginados.map(
+                                (
+                                    tecnico,
+                                    index
+                                ) => {
                                     const tecnicoId =
                                         tecnico.tecnico_id;
 
@@ -848,7 +1220,9 @@ const AdminHome = () => {
                                                     ? 0
                                                     : -1
                                             }
-                                            onClick={abrir}
+                                            onClick={
+                                                abrir
+                                            }
                                             onKeyDown={(
                                                 event
                                             ) => {
@@ -893,7 +1267,10 @@ const AdminHome = () => {
                                                         {
                                                             tecnico.chamados
                                                         }{" "}
-                                                        chamados
+                                                        {tecnico.chamados ===
+                                                        1
+                                                            ? "chamado"
+                                                            : "chamados"}
                                                     </p>
                                                 </div>
                                             </div>
@@ -929,7 +1306,14 @@ const AdminHome = () => {
                                                             Lucro
                                                         </p>
 
-                                                        <p className="mt-1 text-sm font-bold text-emerald-600">
+                                                        <p
+                                                            className={`mt-1 text-sm font-bold ${
+                                                                tecnico.lucro >=
+                                                                0
+                                                                    ? "text-emerald-600"
+                                                                    : "text-red-600"
+                                                            }`}
+                                                        >
                                                             {formatCurrency(
                                                                 tecnico.lucro
                                                             )}
@@ -943,6 +1327,7 @@ const AdminHome = () => {
                                                         !tecnicoId
                                                     }
                                                     title="Visualizar desempenho do técnico"
+                                                    aria-label="Visualizar desempenho do técnico"
                                                     onClick={(
                                                         event
                                                     ) => {
@@ -967,130 +1352,50 @@ const AdminHome = () => {
                             )}
                     </div>
 
-                    {!loadingTecnicos &&
-                        totalPagesTecnicos > 1 && (
-                            <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm text-muted-foreground">
-                                    Mostrando{" "}
-                                    <span className="font-medium text-foreground">
-                                        {(pageTecnicos -
-                                            1) *
-                                            limit +
-                                            1}
-                                    </span>{" "}
-                                    a{" "}
-                                    <span className="font-medium text-foreground">
-                                        {Math.min(
-                                            pageTecnicos *
-                                                limit,
-                                            totalTecnicos
-                                        )}
-                                    </span>{" "}
-                                    de{" "}
-                                    <span className="font-medium text-foreground">
-                                        {totalTecnicos}
-                                    </span>{" "}
-                                    resultados
-                                </span>
-
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageTecnicos ===
-                                            1
-                                        }
-                                        onClick={() =>
-                                            setPageTecnicos(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.max(
-                                                        1,
-                                                        pagina -
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-
-                                    {Array.from(
-                                        {
-                                            length: totalPagesTecnicos,
-                                        },
-                                        (_, index) =>
-                                            index + 1
-                                    ).map(
-                                        (pagina) => (
-                                            <Button
-                                                key={
-                                                    pagina
-                                                }
-                                                variant={
-                                                    pagina ===
-                                                    pageTecnicos
-                                                        ? "default"
-                                                        : "outline"
-                                                }
-                                                size="sm"
-                                                onClick={() =>
-                                                    setPageTecnicos(
-                                                        pagina
-                                                    )
-                                                }
-                                                className="h-8 w-8 rounded-lg p-0 text-xs"
-                                            >
-                                                {
-                                                    pagina
-                                                }
-                                            </Button>
-                                        )
-                                    )}
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            pageTecnicos ===
-                                            totalPagesTecnicos
-                                        }
-                                        onClick={() =>
-                                            setPageTecnicos(
-                                                (
-                                                    pagina
-                                                ) =>
-                                                    Math.min(
-                                                        totalPagesTecnicos,
-                                                        pagina +
-                                                            1
-                                                    )
-                                            )
-                                        }
-                                        className="h-8 w-8 rounded-lg p-0"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                    {!loading && (
+                        <Paginacao
+                            paginaAtual={
+                                pageTecnicos
+                            }
+                            totalPaginas={
+                                totalPagesTecnicos
+                            }
+                            totalResultados={
+                                totalTecnicos
+                            }
+                            onChange={
+                                setPageTecnicos
+                            }
+                        />
+                    )}
                 </div>
             </div>
 
             <ChamadoDetalheModal
-                isOpen={modalChamadoAberto}
-                onClose={fecharModalChamado}
-                chamadoId={chamadoSelecionadoId}
-                empresa={empresaSelecionada}
+                isOpen={
+                    modalChamadoAberto
+                }
+                onClose={
+                    fecharModalChamado
+                }
+                chamadoId={
+                    chamadoSelecionadoId
+                }
+                empresa={
+                    empresaSelecionada
+                }
             />
 
             <TecnicoDetalheModal
-                isOpen={modalTecnicoAberto}
-                onClose={fecharModalTecnico}
-                tecnico={tecnicoSelecionado}
+                isOpen={
+                    modalTecnicoAberto
+                }
+                onClose={
+                    fecharModalTecnico
+                }
+                tecnico={
+                    tecnicoSelecionado
+                }
             />
         </div>
     );

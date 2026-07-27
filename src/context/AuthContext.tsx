@@ -1,84 +1,300 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import supabase from "../lib/supabase"; 
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import type { User } from "@supabase/supabase-js";
+import supabase from "../lib/supabase";
+import { getUsuarioSistemaAtual } from "../services/auth/get-usuario-sistema-atual.service";
+
+export type TipoPerfilSistema =
+    | 1
+    | 2
+    | 3;
+
+export type UsuarioAutenticado = User & {
+    bancoId: string | null;
+    tipo_perfil_id: number | null;
+    tecnicoId: string | null;
+    tecnicoNome: string | null;
+};
 
 interface AuthContextType {
-    user: any | null; 
+    user: UsuarioAutenticado | null;
     loading: boolean;
     isAdmin: boolean;
+    isTecnico: boolean;
     isStaff: boolean;
+    isCliente: boolean;
+    rotaInicial: string | null;
+    refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+export const obterRotaInicialPorPerfil = (
+    tipoPerfilId: number | null | undefined
+): string | null => {
+    const perfil = Number(tipoPerfilId);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    if (perfil === 1) {
+        return "/admin";
+    }
 
-    useEffect(() => {
-        // Função interna para buscar os dados sem depender de arquivos externos
-        const getSessionAndUser = async () => {
+    if (perfil === 2) {
+        return "/staff/dashboard";
+    }
+
+    if (perfil === 3) {
+        return "/cliente";
+    }
+
+    return null;
+};
+
+const AuthContext =
+    createContext<AuthContextType>(
+        {} as AuthContextType
+    );
+
+export const AuthProvider = ({
+    children,
+}: {
+    children: React.ReactNode;
+}) => {
+    const [user, setUser] =
+        useState<UsuarioAutenticado | null>(
+            null
+        );
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const carregarUsuario = useCallback(
+        async (authUser: User | null) => {
+            if (!authUser) {
+                setUser(null);
+                setLoading(false);
+                return;
+            }
+
             try {
-                // 1. Pega a sessão atual do cache do navegador instantaneamente
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                
-                if (sessionError || !session?.user) {
+                const usuarioSistema =
+                    await getUsuarioSistemaAtual(
+                        authUser
+                    );
+
+                if (!usuarioSistema) {
                     setUser(null);
-                    setLoading(false);
                     return;
                 }
 
-                // 2. Busca o perfil do usuário no banco
-                const { data: usuarioDb, error: dbError } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .eq('email', session.user.email)
-                    .maybeSingle();
+                const tipoPerfilId = Number(
+                    usuarioSistema.tipo_perfil_id
+                );
 
-                if (dbError) {
-                    console.error("Erro ao ler tabela usuarios:", dbError);
+                let tecnicoId: string | null =
+                    null;
+
+                let tecnicoNome:
+                    | string
+                    | null = null;
+
+                if (tipoPerfilId === 2) {
+                    const {
+                        data: tecnico,
+                        error: tecnicoError,
+                    } = await supabase
+                        .from("tecnico")
+                        .select("id, nome")
+                        .eq(
+                            "usuario_id",
+                            usuarioSistema.id
+                        )
+                        .maybeSingle();
+
+                    if (tecnicoError) {
+                        console.error(
+                            "Erro ao buscar vínculo do técnico:",
+                            tecnicoError.message
+                        );
+                    }
+
+                    tecnicoId =
+                        tecnico?.id ?? null;
+
+                    tecnicoNome =
+                        tecnico?.nome ?? null;
                 }
 
-                // 3. Monta o usuário e salva no estado
                 setUser({
-                    ...session.user,
-                    bancoId: usuarioDb?.id,
-                    tipo_perfil_id: usuarioDb?.tipo_perfil_id
+                    ...authUser,
+                    bancoId:
+                        usuarioSistema.id,
+                    tipo_perfil_id:
+                        tipoPerfilId,
+                    tecnicoId,
+                    tecnicoNome,
                 });
             } catch (error) {
-                console.error("Erro fatal no AuthContext:", error);
+                console.error(
+                    "Erro ao carregar usuário:",
+                    error
+                );
+
                 setUser(null);
             } finally {
-                // GARANTIA: O loading sempre vai desligar!
                 setLoading(false);
             }
-        };
+        },
+        []
+    );
 
-        // Chama a função ao carregar o app
-        getSessionAndUser();
+    const refreshUser =
+        useCallback(async () => {
+            try {
+                setLoading(true);
 
-        // Escuta mudanças (ex: se o token expirar ou fizer logout)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (session) {
-                getSessionAndUser();
-            } else {
+                const {
+                    data: {
+                        user: authUser,
+                    },
+                    error,
+                } =
+                    await supabase.auth.getUser();
+
+                if (error) {
+                    throw error;
+                }
+
+                await carregarUsuario(
+                    authUser
+                );
+            } catch (error) {
+                console.error(
+                    "Erro ao atualizar usuário:",
+                    error
+                );
+
                 setUser(null);
                 setLoading(false);
             }
-        });
+        }, [carregarUsuario]);
+
+    useEffect(() => {
+        let ativo = true;
+
+        const iniciarSessao =
+            async () => {
+                try {
+                    setLoading(true);
+
+                    const {
+                        data: { session },
+                        error,
+                    } =
+                        await supabase.auth.getSession();
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    if (ativo) {
+                        await carregarUsuario(
+                            session?.user ??
+                                null
+                        );
+                    }
+                } catch (error) {
+                    console.error(
+                        "Erro ao recuperar sessão:",
+                        error
+                    );
+
+                    if (ativo) {
+                        setUser(null);
+                        setLoading(false);
+                    }
+                }
+            };
+
+        void iniciarSessao();
+
+        const {
+            data: { subscription },
+        } =
+            supabase.auth.onAuthStateChange(
+                (_event, session) => {
+                    if (!ativo) {
+                        return;
+                    }
+
+                    setLoading(true);
+
+                    void carregarUsuario(
+                        session?.user ??
+                            null
+                    );
+                }
+            );
 
         return () => {
+            ativo = false;
             subscription.unsubscribe();
         };
-    }, []);
+    }, [carregarUsuario]);
 
-    const isAdmin = user?.tipo_perfil_id === 1;
-    const isStaff = user?.tipo_perfil_id === 2 || user?.tipo_perfil_id === 1; 
+    const isAdmin =
+        Number(user?.tipo_perfil_id) ===
+        1;
+
+    const isTecnico =
+        Number(user?.tipo_perfil_id) ===
+        2;
+
+    const isCliente =
+        Number(user?.tipo_perfil_id) ===
+        3;
+
+    const isStaff = isTecnico;
+
+    const rotaInicial =
+        obterRotaInicialPorPerfil(
+            user?.tipo_perfil_id
+        );
+
+    const value = useMemo(
+        () => ({
+            user,
+            loading,
+            isAdmin,
+            isTecnico,
+            isStaff,
+            isCliente,
+            rotaInicial,
+            refreshUser,
+        }),
+        [
+            user,
+            loading,
+            isAdmin,
+            isTecnico,
+            isStaff,
+            isCliente,
+            rotaInicial,
+            refreshUser,
+        ]
+    );
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAdmin, isStaff }}>
+        <AuthContext.Provider
+            value={value}
+        >
             {children}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () =>
+    useContext(AuthContext);
