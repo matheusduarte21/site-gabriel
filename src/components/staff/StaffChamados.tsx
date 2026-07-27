@@ -72,7 +72,7 @@ interface PaginacaoProps {
     onChange: (pagina: number) => void;
 }
 
-const ITENS_POR_PAGINA = 6;
+const ITENS_POR_PAGINA = 3;
 
 const InformacaoCompacta = ({
     icon,
