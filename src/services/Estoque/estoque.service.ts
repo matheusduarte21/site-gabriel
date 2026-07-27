@@ -9,6 +9,7 @@ import {
     SituacaoEquipamento,
     TecnicoEstoque,
     TipoEquipamento,
+    DevolverEquipamentoPayload
 } from "../../types/estoque.type";
 
 const EQUIPAMENTO_SELECT = `
@@ -30,6 +31,239 @@ const EQUIPAMENTO_SELECT = `
         email_contato
     )
 `;
+const MOVIMENTACAO_SELECT = `
+    id,
+    equipamento_id,
+    tipo_movimentacao,
+    cliente_origem_id,
+    cliente_destino_id,
+    tecnico_origem_id,
+    tecnico_destino_id,
+    condicao_anterior,
+    condicao_nova,
+    situacao_anterior,
+    situacao_nova,
+    chamado_id,
+    motivo,
+    observacoes,
+    movimentado_por,
+    criado_em,
+    equipamento:equipamento!equipamento_movimentacao_equipamento_fk (
+        id,
+        tipo_equipamento_id,
+        cliente_id,
+        tecnico_id,
+        modelo,
+        numero_serie,
+        patrimonio,
+        condicao,
+        situacao,
+        observacoes,
+        criado_por,
+        atualizado_por,
+        criado_em,
+        atualizado_em,
+        tipo_equipamento:tipo_equipamento!equipamento_tipo_fk (
+            id,
+            nome,
+            descricao,
+            ativo
+        ),
+        cliente:cliente!equipamento_cliente_fk (
+            id,
+            nome
+        ),
+        tecnico:tecnico!equipamento_tecnico_fk (
+            id,
+            nome,
+            telefone,
+            email_contato
+        )
+    ),
+    cliente_origem:cliente!equipamento_movimentacao_cliente_origem_fk (
+        id,
+        nome
+    ),
+    cliente_destino:cliente!equipamento_movimentacao_cliente_destino_fk (
+        id,
+        nome
+    ),
+    tecnico_origem:tecnico!equipamento_movimentacao_tecnico_origem_fk (
+        id,
+        nome,
+        telefone,
+        email_contato
+    ),
+    tecnico_destino:tecnico!equipamento_movimentacao_tecnico_destino_fk (
+        id,
+        nome,
+        telefone,
+        email_contato
+    )
+`;
+
+const normalizarMovimentacao = (
+    registro: Record<string, unknown>
+): EquipamentoMovimentacao => {
+    const equipamentoBruto = relacaoUnica(
+        registro.equipamento as
+            | Record<string, unknown>
+            | Record<string, unknown>[]
+            | null
+            | undefined
+    );
+
+    return {
+        ...(registro as unknown as EquipamentoMovimentacao),
+        equipamento: equipamentoBruto
+            ? normalizarEquipamento(
+                  equipamentoBruto
+              )
+            : null,
+        cliente_origem: relacaoUnica(
+            registro.cliente_origem as
+                | ClienteEstoque
+                | ClienteEstoque[]
+                | null
+                | undefined
+        ),
+        cliente_destino: relacaoUnica(
+            registro.cliente_destino as
+                | ClienteEstoque
+                | ClienteEstoque[]
+                | null
+                | undefined
+        ),
+        tecnico_origem: relacaoUnica(
+            registro.tecnico_origem as
+                | TecnicoEstoque
+                | TecnicoEstoque[]
+                | null
+                | undefined
+        ),
+        tecnico_destino: relacaoUnica(
+            registro.tecnico_destino as
+                | TecnicoEstoque
+                | TecnicoEstoque[]
+                | null
+                | undefined
+        ),
+    };
+};
+
+export async function getMovimentacoesEstoque(
+    filtros: {
+        equipamentoId?: string;
+        tipo?: string;
+        clienteId?: string;
+        tecnicoId?: string;
+        dataInicio?: string;
+        dataFim?: string;
+        pagina?: number;
+        porPagina?: number;
+    } = {}
+): Promise<
+    ResultadoPaginado<EquipamentoMovimentacao>
+> {
+    const pagina = Math.max(
+        1,
+        filtros.pagina || 1
+    );
+
+    const porPagina = Math.max(
+        1,
+        filtros.porPagina || 10
+    );
+
+    const inicio =
+        (pagina - 1) * porPagina;
+
+    const fim =
+        inicio + porPagina - 1;
+
+    let query = supabase
+        .from("equipamento_movimentacao")
+        .select(MOVIMENTACAO_SELECT, {
+            count: "exact",
+        });
+
+    if (filtros.equipamentoId) {
+        query = query.eq(
+            "equipamento_id",
+            filtros.equipamentoId
+        );
+    }
+
+    if (filtros.tipo) {
+        query = query.eq(
+            "tipo_movimentacao",
+            filtros.tipo
+        );
+    }
+
+    if (filtros.clienteId) {
+        query = query.or(
+            `cliente_origem_id.eq.${filtros.clienteId},cliente_destino_id.eq.${filtros.clienteId}`
+        );
+    }
+
+    if (filtros.tecnicoId) {
+        query = query.or(
+            `tecnico_origem_id.eq.${filtros.tecnicoId},tecnico_destino_id.eq.${filtros.tecnicoId}`
+        );
+    }
+
+    if (filtros.dataInicio) {
+        query = query.gte(
+            "criado_em",
+            `${filtros.dataInicio}T00:00:00`
+        );
+    }
+
+    if (filtros.dataFim) {
+        query = query.lte(
+            "criado_em",
+            `${filtros.dataFim}T23:59:59`
+        );
+    }
+
+    const {
+        data,
+        error,
+        count,
+    } = await query
+        .order("criado_em", {
+            ascending: false,
+        })
+        .range(inicio, fim);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    const total = count || 0;
+
+    return {
+        dados: (data || []).map(
+            (registro) =>
+                normalizarMovimentacao(
+                    registro as unknown as Record<
+                        string,
+                        unknown
+                    >
+                )
+        ),
+        total,
+        pagina,
+        porPagina,
+        totalPaginas: Math.max(
+            1,
+            Math.ceil(
+                total / porPagina
+            )
+        ),
+    };
+}MOVIMENTACAO_SELECT 
 
 const relacaoUnica = <T>(
     valor: T | T[] | null | undefined
@@ -260,7 +494,7 @@ export async function getEquipamentos(
     if (filtros.busca?.trim()) {
         const busca = filtros.busca
             .trim()
-            .replaceAll(",", " ");
+            .replace(",", " ");
 
         query = query.or(
             `patrimonio.ilike.%${busca}%,numero_serie.ilike.%${busca}%,modelo.ilike.%${busca}%`
@@ -410,16 +644,19 @@ export async function movimentarEquipamento(
 }
 
 export async function devolverEquipamento(
-    equipamentoId: string
+    payload: DevolverEquipamentoPayload
 ): Promise<void> {
     const { error } = await supabase.rpc(
         "estoque_devolver_equipamento_admin",
         {
             p_equipamento_id:
-                equipamentoId,
+                payload.equipamentoId,
             p_motivo:
+                payload.motivo?.trim() ||
                 "Devolução registrada pelo administrador",
-            p_observacoes: null,
+            p_observacoes:
+                payload.observacoes?.trim() ||
+                null,
         }
     );
 
