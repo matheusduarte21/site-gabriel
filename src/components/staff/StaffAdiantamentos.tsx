@@ -26,15 +26,15 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
-import { getMeusAdiantamentos } from "../../services/Tecnicos/get-meus-adiantamentos.service";
-import { responderValorAdiantamentoTecnico } from "../../services/Tecnicos/responder-valor-adiantamento.service";
-import { confirmarAdiantamentoTecnico } from "../../services/Tecnicos/confirmar-adiantamento.service";
 import StaffHeader from "./StaffHeader";
 import {
     converterNumero,
     formatarData,
     formatarMoeda,
 } from "./staff.utils";
+import { getMeusAdiantamentos } from "../../services/Tecnicos/Adiantamento-staff/get-meus-adiantamentos.service";
+import { confirmarAdiantamentoTecnico } from "../../services/Tecnicos/Adiantamento-staff/confirmar-adiantamento.service";
+import { responderValorAdiantamentoTecnico } from "../../services/Tecnicos/Adiantamento-staff/responder-valor-adiantamento.service";
 
 interface CardResumoProps {
     titulo: string;

@@ -10,6 +10,7 @@ import {
     Loader2,
     LogOut,
     Moon,
+    PackageOpen,
     Settings,
     Sun,
     UserCircle,
@@ -54,6 +55,11 @@ const navItems = [
         to: "/staff/videos",
         icon: BookOpen,
         label: "Vídeos e aulas",
+    },
+    {
+        to: "/staff/estoque",
+        icon: PackageOpen,
+        label: "Estoque",
     },
 ];
 

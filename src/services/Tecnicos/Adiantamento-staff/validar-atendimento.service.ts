@@ -1,9 +1,6 @@
-import supabase from "../../lib/supabase";
-import {
-    AcompanhamentoTecnico,
-    ValidacaoAtendimento,
-} from "../../types/portal-tecnico.type";
-import { getOuCriarAcompanhamento } from "./acompanhamento-tecnico.service";
+import supabase from "../../../lib/supabase";
+import { getOuCriarAcompanhamento } from "../acompanhamento-tecnico.service";
+
 
 interface ValidarAtendimentoParams {
     chamadoId: string;

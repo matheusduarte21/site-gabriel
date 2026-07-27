@@ -1,5 +1,6 @@
-import supabase from "../../lib/supabase";
-import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
+import supabase from "../../../lib/supabase";
+import { AdiantamentoTecnico } from "../../../types/portal-tecnico.type";
+
 
 interface ResponderValorAdiantamentoParams {
     adiantamentoId: string;

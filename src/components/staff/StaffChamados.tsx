@@ -27,7 +27,6 @@ import {
 import toast from "react-hot-toast";
 import { ChamadoTecnicoPortal } from "../../types/portal-tecnico.type";
 import { getMeusChamados } from "../../services/Tecnicos/get-meus-chamados.service";
-import { validarAtendimentoTecnico } from "../../services/Tecnicos/validar-atendimento.service";
 import { atualizarStatusTecnico } from "../../services/Tecnicos/atualizar-status-tecnico.service";
 import StaffHeader from "./StaffHeader";
 import {
@@ -42,6 +41,7 @@ import {
     obterProximaEtapa,
     obterTextoValidacao,
 } from "./staff.utils";
+import { validarAtendimentoTecnico } from "../../services/Tecnicos/Adiantamento-staff/validar-atendimento.service";
 
 type FiltroStatus =
     | "todos"

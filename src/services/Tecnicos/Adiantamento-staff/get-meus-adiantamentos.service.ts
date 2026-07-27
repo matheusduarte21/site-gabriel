@@ -1,6 +1,6 @@
-import supabase from "../../lib/supabase";
-import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
-import { getTecnicoLogado } from "./get-tecnico-logado.service";
+import supabase from "../../../lib/supabase";
+import { AdiantamentoTecnico } from "../../../types/portal-tecnico.type";
+import { getTecnicoLogado } from "../get-tecnico-logado.service";
 
 interface AdiantamentoResposta
     extends Omit<
