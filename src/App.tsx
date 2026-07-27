@@ -35,6 +35,7 @@ import EquipamentosAdmin from "./components/admin/estoque/EquipamentosAdmin";
 import EstoqueDashboard from "./components/admin/estoque/EstoqueDashboard";
 import EstoqueLayout from "./components/admin/estoque/EstoqueLayout";
 import TiposEquipamentoAdmin from "./components/admin/estoque/TiposEquipamentoAdmin";
+import StaffEstoque from "./components/staff/StaffEstoque";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -216,6 +217,11 @@ function App() {
                             element={
                                 <StaffDashboard />
                             }
+                        />
+
+                        <Route
+                            path="estoque"
+                            element={<StaffEstoque />}
                         />
 
                         <Route
