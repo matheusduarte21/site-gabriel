@@ -29,6 +29,12 @@ import BibliotecaVideos from "./components/admin/BibliotecaVideos/BibliotecaVide
 import Chamados from "./components/admin/ChamadosTemp.";
 import Login from "./components/auth/Login";
 import AdiantamentosAdmin from "./components/admin/adiantamento/AdiantamentosAdmin";
+import EquipamentosDevolvidos from "./components/admin/estoque/EquipamentosDevolvidos";
+import MovimentacoesEstoque from "./components/admin/estoque/MovimentacoesEstoque";
+import EquipamentosAdmin from "./components/admin/estoque/EquipamentosAdmin";
+import EstoqueDashboard from "./components/admin/estoque/EstoqueDashboard";
+import EstoqueLayout from "./components/admin/estoque/EstoqueLayout";
+import TiposEquipamentoAdmin from "./components/admin/estoque/TiposEquipamentoAdmin";
 
 const PaginaNaoEncontrada = () => {
     return (
@@ -111,6 +117,37 @@ function App() {
                             </ProtectedRoute>
                         }
                     >
+
+                        <Route
+                            path="estoque"
+                            element={<EstoqueLayout />}
+                        >
+                            <Route
+                                index
+                                element={<EstoqueDashboard />}
+                            />
+
+                            <Route
+                                path="equipamentos"
+                                element={<EquipamentosAdmin />}
+                            />
+
+                            <Route
+                                path="tipos"
+                                element={<TiposEquipamentoAdmin />}
+                            />
+
+                            <Route
+                                path="movimentacoes"
+                                element={<MovimentacoesEstoque />}
+                            />
+
+                            <Route
+                                path="devolvidos"
+                                element={<EquipamentosDevolvidos />}
+                            />
+                        </Route>
+
                         <Route
                             index
                             element={<AdminHome />}

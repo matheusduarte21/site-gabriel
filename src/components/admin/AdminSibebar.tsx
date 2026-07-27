@@ -22,6 +22,7 @@ import {
     Users,
     Wrench,
     X,
+    PackageOpen,
 } from "lucide-react";
 import { logoutUsuario } from "../../services/auth/auth-logout.service";
 import teccorpLogo from "../../assests/TECCORP LOGO/2.png";
@@ -68,6 +69,12 @@ const navItems = [
         icon: GraduationCap,
         label: "Vídeos e aulas",
     },
+    {
+    to: "/admin/estoque",
+    icon: PackageOpen,
+    label: "Estoque",
+},
+
 ];
 
 interface AdminSidebarProps {
