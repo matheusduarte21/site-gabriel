@@ -60,7 +60,7 @@ interface ModalObservacao {
         | "divergencia_recebimento";
 }
 
-const ITENS_POR_PAGINA = 5;
+const ITENS_POR_PAGINA = 3;
 
 const CardResumo = ({
     titulo,
@@ -70,24 +70,24 @@ const CardResumo = ({
     className,
 }: CardResumoProps) => {
     return (
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                         {titulo}
                     </p>
 
-                    <p className="mt-2 text-xl font-bold text-foreground">
+                    <p className="mt-1.5 truncate text-lg font-bold text-foreground">
                         {valor}
                     </p>
 
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
                         {descricao}
                     </p>
                 </div>
 
                 <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${className}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${className}`}
                 >
                     {icon}
                 </span>
@@ -135,13 +135,13 @@ const Paginacao = ({
     });
 
     return (
-        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
+        <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-xs text-muted-foreground sm:text-left">
                 Mostrando{" "}
                 <span className="font-bold text-foreground">
                     {inicioRegistro}
                 </span>{" "}
-                até{" "}
+                a{" "}
                 <span className="font-bold text-foreground">
                     {fimRegistro}
                 </span>{" "}
@@ -162,7 +162,7 @@ const Paginacao = ({
                     }
                     disabled={paginaAtual === 1}
                     aria-label="Página anterior"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -196,11 +196,11 @@ const Paginacao = ({
                                             pagina
                                         )
                                     }
-                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-bold ${
+                                    className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-bold ${
                                         pagina ===
                                         paginaAtual
-                                            ? "bg-primary text-primary-foreground"
-                                            : "border border-border bg-background text-muted-foreground hover:bg-secondary"
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : "border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
                                     }`}
                                 >
                                     {pagina}
@@ -222,7 +222,7 @@ const Paginacao = ({
                         totalPaginas
                     }
                     aria-label="Próxima página"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     <ChevronRight className="h-4 w-4" />
                 </button>
@@ -267,7 +267,7 @@ const formatarStatus = (
     valor: string
 ): string => {
     return valor
-        .replace("_", " ")
+        .replace(/_/g, " ")
         .replace(/\b\w/g, (letra) =>
             letra.toUpperCase()
         );
@@ -293,7 +293,7 @@ const obterEtapaAtual = (
     ) {
         return {
             label:
-                "Aguardando sua validação",
+                "Aguardando validação",
             className:
                 "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
         };
@@ -328,7 +328,7 @@ const obterEtapaAtual = (
     ) {
         return {
             label:
-                "Confirme o recebimento",
+                "Confirmar recebimento",
             className:
                 "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300",
         };
@@ -756,7 +756,7 @@ const StaffAdiantamentos = () => {
                             void carregarAdiantamentos()
                         }
                         disabled={loading}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-bold text-foreground shadow-sm hover:bg-secondary disabled:opacity-50"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                         <RefreshCw
                             className={`h-4 w-4 ${
@@ -771,7 +771,7 @@ const StaffAdiantamentos = () => {
                 }
             />
 
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-5">
                 <CardResumo
                     titulo="Total ativo"
                     valor={formatarMoeda(
@@ -779,9 +779,9 @@ const StaffAdiantamentos = () => {
                     )}
                     descricao="Adiantamentos não cancelados"
                     icon={
-                        <Wallet className="h-5 w-5" />
+                        <Wallet className="h-4 w-4" />
                     }
-                    className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                    className="bg-primary/10 text-primary"
                 />
 
                 <CardResumo
@@ -791,7 +791,7 @@ const StaffAdiantamentos = () => {
                     )}
                     descricao="Aguardando sua aprovação"
                     icon={
-                        <ShieldCheck className="h-5 w-5" />
+                        <ShieldCheck className="h-4 w-4" />
                     }
                     className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                 />
@@ -803,7 +803,7 @@ const StaffAdiantamentos = () => {
                     )}
                     descricao="Valores que você aprovou"
                     icon={
-                        <Banknote className="h-5 w-5" />
+                        <Banknote className="h-4 w-4" />
                     }
                     className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
                 />
@@ -815,7 +815,7 @@ const StaffAdiantamentos = () => {
                     )}
                     descricao="Pagamentos a confirmar"
                     icon={
-                        <FileCheck2 className="h-5 w-5" />
+                        <FileCheck2 className="h-4 w-4" />
                     }
                     className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
                 />
@@ -827,20 +827,20 @@ const StaffAdiantamentos = () => {
                     )}
                     descricao="Saldo para os fechamentos"
                     icon={
-                        <CircleDollarSign className="h-5 w-5" />
+                        <CircleDollarSign className="h-4 w-4" />
                     }
                     className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                 />
             </section>
 
             {erro && (
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                <div className="mt-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                     <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                     {erro}
                 </div>
             )}
 
-            <section className="mt-6 space-y-4">
+            <section className="mt-5">
                 {loading ? (
                     <div className="flex min-h-[280px] items-center justify-center rounded-xl border border-border bg-card">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -855,350 +855,353 @@ const StaffAdiantamentos = () => {
                         </h3>
                     </div>
                 ) : (
-                    adiantamentosPaginados.map(
-                        (adiantamento) => {
-                            const etapa =
-                                obterEtapaAtual(
-                                    adiantamento
-                                );
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                        {adiantamentosPaginados.map(
+                            (adiantamento) => {
+                                const etapa =
+                                    obterEtapaAtual(
+                                        adiantamento
+                                    );
 
-                            const processando =
-                                processandoId ===
-                                adiantamento.id;
+                                const processando =
+                                    processandoId ===
+                                    adiantamento.id;
 
-                            const podeValidarValor =
-                                adiantamento.status_pagamento ===
-                                    "pendente" &&
-                                adiantamento.validacao_valor_tecnico ===
-                                    "pendente";
+                                const podeValidarValor =
+                                    adiantamento.status_pagamento ===
+                                        "pendente" &&
+                                    adiantamento.validacao_valor_tecnico ===
+                                        "pendente";
 
-                            const aguardandoPagamento =
-                                adiantamento.validacao_valor_tecnico ===
-                                    "aprovado" &&
-                                adiantamento.status_pagamento ===
-                                    "pendente";
+                                const aguardandoPagamento =
+                                    adiantamento.validacao_valor_tecnico ===
+                                        "aprovado" &&
+                                    adiantamento.status_pagamento ===
+                                        "pendente";
 
-                            const podeConfirmarRecebimento =
-                                adiantamento.status_pagamento ===
-                                    "pago" &&
-                                adiantamento.confirmacao_recebimento ===
-                                    "pendente";
+                                const podeConfirmarRecebimento =
+                                    adiantamento.status_pagamento ===
+                                        "pago" &&
+                                    adiantamento.confirmacao_recebimento ===
+                                        "pendente";
 
-                            const saldoCompensar =
-                                Math.max(
-                                    0,
-                                    converterNumero(
-                                        adiantamento.valor
-                                    ) -
+                                const saldoCompensar =
+                                    Math.max(
+                                        0,
                                         converterNumero(
-                                            adiantamento.valor_compensado
-                                        )
-                                );
+                                            adiantamento.valor
+                                        ) -
+                                            converterNumero(
+                                                adiantamento.valor_compensado
+                                            )
+                                    );
 
-                            return (
-                                <article
-                                    key={
-                                        adiantamento.id
-                                    }
-                                    className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
-                                >
-                                    <div className="p-4 sm:p-5">
-                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                                                    Adiantamento
-                                                </p>
+                                return (
+                                    <article
+                                        key={
+                                            adiantamento.id
+                                        }
+                                        className="flex min-h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                                    >
+                                        <div className="border-b border-border bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-[9px] font-bold uppercase tracking-wide text-primary">
+                                                        Adiantamento
+                                                    </p>
 
-                                                <h3 className="mt-1 text-xl font-bold text-foreground">
-                                                    {formatarMoeda(
-                                                        adiantamento.valor
-                                                    )}
-                                                </h3>
+                                                    <h3 className="mt-1 text-xl font-bold text-foreground">
+                                                        {formatarMoeda(
+                                                            adiantamento.valor
+                                                        )}
+                                                    </h3>
+                                                </div>
 
-                                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                                <span
+                                                    className={`max-w-[55%] rounded-full border px-2.5 py-1 text-center text-[9px] font-bold leading-4 ${etapa.className}`}
+                                                >
                                                     {
-                                                        adiantamento.descricao
+                                                        etapa.label
                                                     }
-                                                </p>
+                                                </span>
                                             </div>
 
-                                            <span
-                                                className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${etapa.className}`}
-                                            >
-                                                {
-                                                    etapa.label
-                                                }
-                                            </span>
+                                            <p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-muted-foreground">
+                                                {adiantamento.descricao ||
+                                                    "Sem descrição informada."}
+                                            </p>
                                         </div>
 
-                                        <div className="mt-5 grid grid-cols-1 gap-3 rounded-xl bg-secondary/40 p-4 text-sm sm:grid-cols-4">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Chamado
-                                                </p>
+                                        <div className="flex flex-1 flex-col p-3">
+                                            <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg bg-secondary/40 p-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                        Chamado
+                                                    </p>
 
-                                                <p className="mt-1 font-bold text-foreground">
-                                                    {adiantamento
-                                                        .chamado
-                                                        ?.numero_chamado ||
-                                                        "Não relacionado"}
-                                                </p>
+                                                    <p className="mt-0.5 truncate text-[11px] font-bold text-foreground">
+                                                        {adiantamento
+                                                            .chamado
+                                                            ?.numero_chamado ||
+                                                            "Não relacionado"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                        Empresa
+                                                    </p>
+
+                                                    <p className="mt-0.5 truncate text-[11px] font-bold text-foreground">
+                                                        {adiantamento
+                                                            .chamado
+                                                            ?.empresa ||
+                                                            "Não informada"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                        Cadastrado em
+                                                    </p>
+
+                                                    <p className="mt-0.5 truncate text-[10px] font-semibold text-foreground">
+                                                        {formatarData(
+                                                            adiantamento.criado_em ||
+                                                                adiantamento.solicitado_em
+                                                        )}
+                                                    </p>
+                                                </div>
+
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                        Saldo a compensar
+                                                    </p>
+
+                                                    <p className="mt-0.5 truncate text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                                                        {formatarMoeda(
+                                                            saldoCompensar
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Empresa
-                                                </p>
-
-                                                <p className="mt-1 font-bold text-foreground">
-                                                    {adiantamento
-                                                        .chamado
-                                                        ?.empresa ||
-                                                        "Não informada"}
-                                                </p>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Cadastrado em
-                                                </p>
-
-                                                <p className="mt-1 font-bold text-foreground">
-                                                    {formatarData(
-                                                        adiantamento.criado_em ||
-                                                            adiantamento.solicitado_em
-                                                    )}
-                                                </p>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Saldo a compensar
-                                                </p>
-
-                                                <p className="mt-1 font-bold text-emerald-700 dark:text-emerald-300">
-                                                    {formatarMoeda(
-                                                        saldoCompensar
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
-                                            {[
-                                                {
-                                                    label:
-                                                        "Validação do valor",
-                                                    valor: adiantamento.validacao_valor_tecnico,
-                                                },
-                                                {
-                                                    label:
-                                                        "Pagamento",
-                                                    valor: adiantamento.status_pagamento,
-                                                },
-                                                {
-                                                    label:
-                                                        "Recebimento",
-                                                    valor: adiantamento.confirmacao_recebimento,
-                                                },
-                                                {
-                                                    label:
-                                                        "Compensação",
-                                                    valor: adiantamento.status_compensacao,
-                                                },
-                                            ].map(
-                                                (item) => (
-                                                    <div
-                                                        key={
-                                                            item.label
-                                                        }
-                                                        className="rounded-xl border border-border bg-background p-3"
-                                                    >
-                                                        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                                                            {
+                                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                                {[
+                                                    {
+                                                        label:
+                                                            "Validação",
+                                                        valor: adiantamento.validacao_valor_tecnico,
+                                                    },
+                                                    {
+                                                        label:
+                                                            "Pagamento",
+                                                        valor: adiantamento.status_pagamento,
+                                                    },
+                                                    {
+                                                        label:
+                                                            "Recebimento",
+                                                        valor: adiantamento.confirmacao_recebimento,
+                                                    },
+                                                    {
+                                                        label:
+                                                            "Compensação",
+                                                        valor: adiantamento.status_compensacao,
+                                                    },
+                                                ].map(
+                                                    (item) => (
+                                                        <div
+                                                            key={
                                                                 item.label
                                                             }
+                                                            className="rounded-lg border border-border bg-background p-2.5"
+                                                        >
+                                                            <p className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">
+                                                                {
+                                                                    item.label
+                                                                }
+                                                            </p>
+
+                                                            <span
+                                                                className={`mt-1.5 inline-flex max-w-full truncate rounded-full border px-2 py-1 text-[9px] font-bold ${obterClasseStatus(
+                                                                    item.valor
+                                                                )}`}
+                                                            >
+                                                                {formatarStatus(
+                                                                    item.valor
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                )}
+                                            </div>
+
+                                            {adiantamento.observacao_validacao && (
+                                                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                                                    <p className="font-bold">
+                                                        Motivo da reprovação
+                                                    </p>
+
+                                                    <p className="mt-1 line-clamp-2 leading-5">
+                                                        {
+                                                            adiantamento.observacao_validacao
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {adiantamento.observacao_recebimento && (
+                                                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                                                    <p className="font-bold">
+                                                        Divergência informada
+                                                    </p>
+
+                                                    <p className="mt-1 line-clamp-2 leading-5">
+                                                        {
+                                                            adiantamento.observacao_recebimento
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {adiantamento.comprovante_url && (
+                                                <a
+                                                    href={
+                                                        adiantamento.comprovante_url
+                                                    }
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                    Ver comprovante
+                                                </a>
+                                            )}
+
+                                            {aguardandoPagamento && (
+                                                <div className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+                                                    <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            Valor aprovado
                                                         </p>
 
-                                                        <span
-                                                            className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[10px] font-bold ${obterClasseStatus(
-                                                                item.valor
-                                                            )}`}
-                                                        >
-                                                            {formatarStatus(
-                                                                item.valor
-                                                            )}
-                                                        </span>
+                                                        <p className="mt-1 line-clamp-2 leading-5">
+                                                            Aguardando o registro do pagamento.
+                                                        </p>
                                                     </div>
-                                                )
+                                                </div>
+                                            )}
+
+                                            {(adiantamento.status_compensacao ===
+                                                "disponivel" ||
+                                                adiantamento.status_compensacao ===
+                                                    "parcial") && (
+                                                <div className="mt-3 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            Disponível para compensação
+                                                        </p>
+
+                                                        <p className="mt-1 line-clamp-2 leading-5">
+                                                            O saldo poderá ser descontado do próximo fechamento.
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
 
-                                        {adiantamento.observacao_validacao && (
-                                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-                                                <p className="font-bold">
-                                                    Motivo da reprovação
-                                                </p>
-
-                                                <p className="mt-1">
-                                                    {
-                                                        adiantamento.observacao_validacao
+                                        {podeValidarValor && (
+                                            <div className="grid grid-cols-2 gap-2 border-t border-border bg-secondary/10 p-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        void handleAprovarValor(
+                                                            adiantamento.id
+                                                        )
                                                     }
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {adiantamento.observacao_recebimento && (
-                                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-                                                <p className="font-bold">
-                                                    Divergência informada
-                                                </p>
-
-                                                <p className="mt-1">
-                                                    {
-                                                        adiantamento.observacao_recebimento
+                                                    disabled={
+                                                        processando
                                                     }
-                                                </p>
+                                                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                >
+                                                    {processando ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <ThumbsUp className="h-4 w-4" />
+                                                    )}
+
+                                                    Aprovar
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        abrirModalObservacao(
+                                                            adiantamento.id,
+                                                            "reprovar_valor"
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        processando
+                                                    }
+                                                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                                                >
+                                                    <ThumbsDown className="h-4 w-4" />
+                                                    Reprovar
+                                                </button>
                                             </div>
                                         )}
 
-                                        {adiantamento.comprovante_url && (
-                                            <a
-                                                href={
-                                                    adiantamento.comprovante_url
-                                                }
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                                Ver comprovante
-                                            </a>
-                                        )}
+                                        {podeConfirmarRecebimento && (
+                                            <div className="grid grid-cols-2 gap-2 border-t border-border bg-secondary/10 p-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        void handleConfirmarRecebimento(
+                                                            adiantamento.id
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        processando
+                                                    }
+                                                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                >
+                                                    {processando ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    )}
 
-                                        {aguardandoPagamento && (
-                                            <div className="mt-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
-                                                <Clock3 className="mt-0.5 h-5 w-5 shrink-0" />
+                                                    Confirmar
+                                                </button>
 
-                                                <div>
-                                                    <p className="font-bold">
-                                                        Valor aprovado
-                                                    </p>
-
-                                                    <p className="mt-1">
-                                                        O administrador ainda precisa registrar o pagamento.
-                                                    </p>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        abrirModalObservacao(
+                                                            adiantamento.id,
+                                                            "divergencia_recebimento"
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        processando
+                                                    }
+                                                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                                                >
+                                                    <Triangle className="h-4 w-4" />
+                                                    Divergência
+                                                </button>
                                             </div>
                                         )}
-
-                                        {(adiantamento.status_compensacao ===
-                                            "disponivel" ||
-                                            adiantamento.status_compensacao ===
-                                                "parcial") && (
-                                            <div className="mt-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-
-                                                <div>
-                                                    <p className="font-bold">
-                                                        Disponível para compensação
-                                                    </p>
-
-                                                    <p className="mt-1">
-                                                        Este valor poderá ser descontado do seu próximo fechamento.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {podeValidarValor && (
-                                        <div className="grid grid-cols-1 gap-3 border-t border-border bg-secondary/10 p-4 sm:grid-cols-2">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    void handleAprovarValor(
-                                                        adiantamento.id
-                                                    )
-                                                }
-                                                disabled={
-                                                    processando
-                                                }
-                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                                            >
-                                                {processando ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <ThumbsUp className="h-4 w-4" />
-                                                )}
-
-                                                Aprovar valor
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    abrirModalObservacao(
-                                                        adiantamento.id,
-                                                        "reprovar_valor"
-                                                    )
-                                                }
-                                                disabled={
-                                                    processando
-                                                }
-                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
-                                            >
-                                                <ThumbsDown className="h-4 w-4" />
-                                                Reprovar valor
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {podeConfirmarRecebimento && (
-                                        <div className="grid grid-cols-1 gap-3 border-t border-border bg-secondary/10 p-4 sm:grid-cols-2">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    void handleConfirmarRecebimento(
-                                                        adiantamento.id
-                                                    )
-                                                }
-                                                disabled={
-                                                    processando
-                                                }
-                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                                            >
-                                                {processando ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <CheckCircle2 className="h-4 w-4" />
-                                                )}
-
-                                                Confirmar recebimento
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    abrirModalObservacao(
-                                                        adiantamento.id,
-                                                        "divergencia_recebimento"
-                                                    )
-                                                }
-                                                disabled={
-                                                    processando
-                                                }
-                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
-                                            >
-                                                <Triangle className="h-4 w-4" />
-                                                Informar divergência
-                                            </button>
-                                        </div>
-                                    )}
-                                </article>
-                            );
-                        }
-                    )
+                                    </article>
+                                );
+                            }
+                        )}
+                    </div>
                 )}
             </section>
 
