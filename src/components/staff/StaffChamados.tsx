@@ -28,7 +28,7 @@ import toast from "react-hot-toast";
 import { ChamadoTecnicoPortal } from "../../types/portal-tecnico.type";
 import { getMeusChamados } from "../../services/Tecnicos/get-meus-chamados.service";
 import { atualizarStatusTecnico } from "../../services/Tecnicos/atualizar-status-tecnico.service";
-import StaffHeader from "./StaffHeader";
+import StaffHeader from "./staffHeader";
 import {
     formatarData,
     formatarHorario,

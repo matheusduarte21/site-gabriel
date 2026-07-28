@@ -1,4 +1,4 @@
-import StaffHeader from "./StaffHeader";
+import StaffHeader from "./staffHeader";
 import PerfilUsuarioContent from "../shared/PerfilUsuarioContent";
 
 const StaffPerfil = () => {

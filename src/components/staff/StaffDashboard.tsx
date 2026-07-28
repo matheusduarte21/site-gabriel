@@ -12,7 +12,7 @@ import {
     ChevronLeft,
     ChevronRight,
     CircleDollarSign,
-    
+
     ClipboardList,
     Clock3,
     MapPin,
@@ -23,7 +23,7 @@ import { Link } from "react-router-dom";
 import { useTecnico } from "../../context/TecnicoContext";
 import { ChamadoTecnicoPortal } from "../../types/portal-tecnico.type";
 import { getMeusChamados } from "../../services/Tecnicos/get-meus-chamados.service";
-import StaffHeader from "./StaffHeader";
+import StaffHeader from "./staffHeader";
 import {
     converterNumero,
     formatarData,

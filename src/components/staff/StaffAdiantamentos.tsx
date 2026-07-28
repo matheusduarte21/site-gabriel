@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { AdiantamentoTecnico } from "../../types/portal-tecnico.type";
-import StaffHeader from "./StaffHeader";
+import StaffHeader from "./staffHeader";
 import {
     converterNumero,
     formatarData,

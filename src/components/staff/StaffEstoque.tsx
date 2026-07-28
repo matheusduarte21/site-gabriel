@@ -20,7 +20,7 @@ import {
     ShieldCheck,
     Wrench,
 } from "lucide-react";
-import StaffHeader from "./StaffHeader";
+import StaffHeader from "./staffHeader";
 import StaffEquipamentoDetalheModal from "./StaffEquipamentoDetalheModal";
 
 import {
